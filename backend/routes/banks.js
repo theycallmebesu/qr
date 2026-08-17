@@ -12,7 +12,7 @@ router.get('/', auth, async (req, res) => {
       // If user has banks specifically assigned, show those OR general unassigned banks
       query = { $or: [{ userId: req.user.id }, { userId: null }, { userId: { $exists: false } }] };
     }
-    const banks = await Bank.find(query).sort({ name: 1 });
+    const banks = await Bank.find(query).populate('userId', 'name email profileImage').sort({ name: 1 });
     res.json(banks);
   } catch (err) {
     console.error(err.message);

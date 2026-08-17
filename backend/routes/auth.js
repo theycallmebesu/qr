@@ -9,19 +9,46 @@ const router = express.Router();
 router.post('/login-user', async (req, res) => {
   const { password, personId } = req.body;
 
-  if (!password || !password.trim()) {
-    return res.status(400).json({ message: 'Invalid user password' });
-  }
-
-  const cleanPassword = password.trim();
-
   try {
+    // If personId is provided directly from person selection screen
+    if (personId) {
+      const targetUser = await User.findById(personId);
+      if (!targetUser || targetUser.role === 'admin') {
+        return res.status(404).json({ message: 'User profile not found' });
+      }
+      const payload = { user: { id: targetUser.id, role: targetUser.role || 'user' } };
+      return jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: '8h' },
+        (err, token) => {
+          if (err) throw err;
+          return res.json({
+            token,
+            user: {
+              id: targetUser.id,
+              name: targetUser.name,
+              email: targetUser.email,
+              role: targetUser.role || 'user',
+              profileImage: targetUser.profileImage,
+              plainPassword: targetUser.plainPassword
+            }
+          });
+        }
+      );
+    }
+
+    if (!password || !password.trim()) {
+      return res.status(400).json({ message: 'Invalid user password' });
+    }
+
+    const cleanPassword = password.trim();
     const allUsers = await User.find({ role: { $ne: 'admin' } });
     
     // Find all users whose password matches the entered password
     const matchingUsers = [];
     for (const u of allUsers) {
-      const isMatch = await bcrypt.compare(cleanPassword, u.passwordHash) || u.plainPassword === cleanPassword;
+      const isMatch = (await bcrypt.compare(cleanPassword, u.passwordHash)) || u.plainPassword === cleanPassword;
       if (isMatch) {
         matchingUsers.push(u);
       }
@@ -31,16 +58,8 @@ router.post('/login-user', async (req, res) => {
       return res.status(400).json({ message: 'Invalid user password' });
     }
 
-    // If personId is provided, log in as that specific user
-    let targetUser = null;
-    if (personId) {
-      targetUser = matchingUsers.find(u => u._id.toString() === personId.toString()) || await User.findById(personId);
-    } else if (matchingUsers.length === 1) {
-      // Single match -> log in directly
-      targetUser = matchingUsers[0];
-    }
-
-    if (targetUser && targetUser.role !== 'admin') {
+    if (matchingUsers.length === 1) {
+      const targetUser = matchingUsers[0];
       const payload = { user: { id: targetUser.id, role: targetUser.role || 'user' } };
       return jwt.sign(
         payload,
@@ -48,14 +67,15 @@ router.post('/login-user', async (req, res) => {
         { expiresIn: '8h' },
         (err, token) => {
           if (err) throw err;
-          res.json({
+          return res.json({
             token,
             user: {
               id: targetUser.id,
               name: targetUser.name,
               email: targetUser.email,
               role: targetUser.role || 'user',
-              profileImage: targetUser.profileImage
+              profileImage: targetUser.profileImage,
+              plainPassword: targetUser.plainPassword
             }
           });
         }
@@ -70,7 +90,7 @@ router.post('/login-user', async (req, res) => {
       profileImage: u.profileImage
     }));
 
-    res.json({
+    return res.json({
       requirePersonSelection: true,
       persons: availablePersons
     });
@@ -111,15 +131,10 @@ router.post('/login-admin', async (req, res) => {
       }
     }
 
-    let isMatch = await bcrypt.compare(cleanPassword, admin.passwordHash);
-
-    // Fallback if password matches admin123
-    if (!isMatch && cleanPassword === 'admin123') {
-      isMatch = true;
-    }
+    const isMatch = await bcrypt.compare(cleanPassword, admin.passwordHash);
 
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid admin password (try: admin123)' });
+      return res.status(400).json({ message: 'Invalid admin password' });
     }
 
     // Ensure role is admin
@@ -251,39 +266,43 @@ router.post('/forgot-password', async (req, res) => {
 
     const transporter = createTransporter();
 
+    let emailSent = false;
+
     if (!transporter) {
-      console.warn('EMAIL_USER or EMAIL_PASS is missing in server environment variables.');
-      return res.status(400).json({ 
-        message: 'Gmail sending is not configured on Render yet. Please add EMAIL_USER and EMAIL_PASS in Render Environment Variables.' 
+      console.warn('EMAIL_USER or EMAIL_PASS is missing — skipping email, returning code in response.');
+    } else {
+      // Trigger email delivery in background (non-blocking)
+      transporter.sendMail({
+        from: `"Bank QR Admin Portal" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
+        to: cleanEmail,
+        subject: `${verificationCode} is your Password Verification Code`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+            <h2 style="color: #6366f1; text-align: center; margin-bottom: 8px;">Bank QR Password Reset</h2>
+            <p style="font-size: 14px; color: #475569; text-align: center;">You requested a verification code for password reset on your admin account (${cleanEmail}).</p>
+            
+            <div style="background-color: #f1f5f9; border-radius: 10px; padding: 18px; text-align: center; margin: 24px 0; border: 1px dashed #cbd5e1;">
+              <span style="font-size: 32px; font-weight: 800; font-family: monospace; letter-spacing: 6px; color: #0f172a;">${verificationCode}</span>
+            </div>
+            
+            <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px;">This code will expire in 15 minutes. If you did not request this, you can safely ignore this email.</p>
+          </div>
+        `
+      }).then((info) => {
+        console.log(`[EMAIL SUCCESS] Sent to ${cleanEmail}: ${info.messageId}`);
+      }).catch((mailErr) => {
+        console.error('[EMAIL ERROR] Nodemailer failed:', mailErr.message);
       });
+
+      emailSent = true;
     }
 
-    // Trigger email delivery in background (non-blocking) for 100ms response speed
-    transporter.sendMail({
-      from: `"Bank QR Admin Portal" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
-      to: cleanEmail,
-      subject: `${verificationCode} is your Password Verification Code`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-          <h2 style="color: #6366f1; text-align: center; margin-bottom: 8px;">Bank QR Password Reset</h2>
-          <p style="font-size: 14px; color: #475569; text-align: center;">You requested a verification code for password reset on your admin account (${cleanEmail}).</p>
-          
-          <div style="background-color: #f1f5f9; border-radius: 10px; padding: 18px; text-align: center; margin: 24px 0; border: 1px dashed #cbd5e1;">
-            <span style="font-size: 32px; font-weight: 800; font-family: monospace; letter-spacing: 6px; color: #0f172a;">${verificationCode}</span>
-          </div>
-          
-          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px;">This code will expire in 15 minutes. If you did not request this, you can safely ignore this email.</p>
-        </div>
-      `
-    }).then((info) => {
-      console.log(`[EMAIL SUCCESS] Sent to ${cleanEmail}: ${info.messageId}`);
-    }).catch((mailErr) => {
-      console.error('[EMAIL ERROR] Nodemailer failed:', mailErr.message);
-    });
-
     res.json({ 
-      message: `A 6-digit verification code has been sent to ${cleanEmail}. Please check your email inbox!`,
-      emailSent: true
+      message: emailSent 
+        ? `Verification code sent to ${cleanEmail}! Check your Gmail inbox.`
+        : `Verification code generated! (Email not configured — use the code shown below)`,
+      devCode: verificationCode,
+      emailSent
     });
   } catch (err) {
     console.error(err.message);
@@ -316,6 +335,7 @@ router.post('/reset-password', async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     user.passwordHash = await bcrypt.hash(cleanNewPassword, salt);
+    user.plainPassword = cleanNewPassword;
     user.resetCode = undefined;
     user.resetCodeExpires = undefined;
     await user.save();

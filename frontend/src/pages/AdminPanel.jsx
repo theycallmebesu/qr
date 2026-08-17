@@ -36,8 +36,44 @@ const AdminPanel = () => {
 
   const [actionLoading, setActionLoading] = useState(false);
 
-  const { logout } = useContext(AuthContext);
+  // Admin Settings Modal State
+  const [showAdminSettingsModal, setShowAdminSettingsModal] = useState(false);
+  const [adminEmailInput, setAdminEmailInput] = useState('');
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [adminSettingsMsg, setAdminSettingsMsg] = useState('');
+  const [adminSettingsError, setAdminSettingsError] = useState('');
+
+  const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const openAdminSettingsModal = () => {
+    setAdminEmailInput(user?.email || '');
+    setAdminPasswordInput('');
+    setAdminSettingsMsg('');
+    setAdminSettingsError('');
+    setShowAdminSettingsModal(true);
+  };
+
+  const handleAdminSettingsSubmit = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    setAdminSettingsMsg('');
+    setAdminSettingsError('');
+    try {
+      const res = await api.put('/users/admin-credentials', {
+        email: adminEmailInput,
+        password: adminPasswordInput
+      });
+      setAdminSettingsMsg(res.data.message || 'Admin Gmail and password updated successfully!');
+      setTimeout(() => {
+        setShowAdminSettingsModal(false);
+      }, 1800);
+    } catch (err) {
+      setAdminSettingsError(err.response?.data?.message || 'Failed to update admin credentials');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -286,7 +322,16 @@ const AdminPanel = () => {
           </div>
         </div>
 
-        <div className="flex space-x-3 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2.5 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={openAdminSettingsModal}
+            className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 border border-purple-500/30 text-white font-medium rounded-xl transition-all flex items-center justify-center space-x-2 text-sm shadow-md"
+          >
+            <Lock size={16} className="text-secondary" />
+            <span>Edit Admin Gmail/Pass</span>
+          </button>
+
           {activeTab === 'banks' ? (
             <button
               onClick={() => openAddBankForPersonModal(selectedPersonFilter === 'all' ? '' : selectedPersonFilter)}
@@ -761,6 +806,91 @@ const AdminPanel = () => {
                     <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   ) : (
                     editingUser ? 'Save Changes' : 'Create Person Profile'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN SETTINGS MODAL (Edit Gmail & Password) */}
+      {showAdminSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+          <div className="glass-panel max-w-md w-full p-6 rounded-2xl relative border border-purple-500/30">
+            <button
+              onClick={() => setShowAdminSettingsModal(false)}
+              className="absolute top-4 right-4 text-textSecondary hover:text-white"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-xl font-bold mb-1 text-white flex items-center space-x-2">
+              <Lock className="text-secondary" size={22} />
+              <span>Edit Admin Credentials</span>
+            </h2>
+            <p className="text-xs text-textSecondary mb-5">
+              Update Admin Gmail address and login password
+            </p>
+
+            {adminSettingsMsg && (
+              <div className="mb-4 p-3 rounded-xl bg-green-500/15 border border-green-500/40 text-green-400 text-sm flex items-center space-x-2">
+                <CheckCircle2 size={18} className="shrink-0" />
+                <span>{adminSettingsMsg}</span>
+              </div>
+            )}
+
+            {adminSettingsError && (
+              <div className="mb-4 p-3 rounded-xl bg-red-500/15 border border-red-500/40 text-red-400 text-sm">
+                {adminSettingsError}
+              </div>
+            )}
+
+            <form onSubmit={handleAdminSettingsSubmit} className="space-y-4">
+              {/* Admin Gmail */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-textSecondary">Admin Gmail Address</label>
+                <input
+                  type="email"
+                  required
+                  value={adminEmailInput}
+                  onChange={(e) => setAdminEmailInput(e.target.value)}
+                  className="input-field text-sm"
+                  placeholder="admin@gmail.com"
+                />
+              </div>
+
+              {/* Admin New Password */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-textSecondary">
+                  New Admin Password (leave blank to keep current)
+                </label>
+                <input
+                  type="password"
+                  value={adminPasswordInput}
+                  onChange={(e) => setAdminPasswordInput(e.target.value)}
+                  className="input-field text-sm"
+                  placeholder="Enter new password (e.g. admin123)"
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminSettingsModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-700 text-textSecondary hover:text-white text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="flex-1 py-2.5 px-4 bg-gradient-to-r from-purple-600 to-secondary text-white font-semibold rounded-xl shadow-lg hover:shadow-secondary/30 transition-all text-sm flex items-center justify-center"
+                >
+                  {actionLoading ? (
+                    <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    "Save Admin Credentials"
                   )}
                 </button>
               </div>

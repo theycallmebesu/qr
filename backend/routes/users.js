@@ -18,6 +18,51 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Update Admin Gmail & Password (Admin only)
+router.put('/admin-credentials', adminAuth, async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    let admin = await User.findById(req.user.id);
+
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin profile not found' });
+    }
+
+    if (email && email.trim()) {
+      const cleanEmail = email.trim().toLowerCase();
+      // Check if email already used by another user
+      const existing = await User.findOne({ email: cleanEmail, _id: { $ne: admin._id } });
+      if (existing) {
+        return res.status(400).json({ message: 'This Gmail address is already in use by another user' });
+      }
+      admin.email = cleanEmail;
+    }
+
+    if (password && password.trim()) {
+      const cleanPassword = password.trim();
+      const salt = await bcrypt.genSalt(10);
+      admin.passwordHash = await bcrypt.hash(cleanPassword, salt);
+      admin.plainPassword = cleanPassword;
+    }
+
+    await admin.save();
+
+    res.json({
+      message: 'Admin Gmail and password updated successfully!',
+      user: {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+        profileImage: admin.profileImage
+      }
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 // Get all non-admin users (for admin panel assignment, with visible password)
 router.get('/', auth, async (req, res) => {
   try {

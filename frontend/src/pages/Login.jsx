@@ -82,7 +82,8 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await api.post('/auth/forgot-password', { email: resetEmail });
-      setResetMsg(res.data.message || `Verification code sent to ${resetEmail}! Check your Gmail inbox.`);
+      setResetMsg(`Verification code sent to ${resetEmail}! Check your Gmail inbox.`);
+      setDevCodeHint('');
       setVerificationCode('');
       setForgotStep(2);
     } catch (err) {
@@ -381,6 +382,12 @@ const Login = () => {
             {/* STEP 2: Enter Verification Code & New Password */}
             {forgotStep === 2 && (
               <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="p-3.5 rounded-xl bg-green-500/15 border border-green-500/40 text-green-300 text-xs space-y-1">
+                  <div className="font-bold flex items-center space-x-1 text-sm text-green-200">
+                    <span>📩 Verification code sent to Gmail</span>
+                  </div>
+                  <p className="text-xs text-green-300/80">Check your inbox at <strong className="text-white">{resetEmail}</strong> and enter the 6-digit code below.</p>
+                </div>
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-textSecondary">6-Digit Verification Code</label>
