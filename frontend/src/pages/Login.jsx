@@ -82,9 +82,13 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await api.post('/auth/forgot-password', { email: resetEmail });
-      setResetMsg(`Verification code sent to ${resetEmail}!`);
-      if (res.data.devCode) {
-        setDevCodeHint(res.data.devCode);
+      const code = res.data.devCode || '';
+      setDevCodeHint(code);
+      if (code) {
+        setVerificationCode(code);
+        setResetMsg(`Verification code generated: ${code}`);
+      } else {
+        setResetMsg(`Verification code sent to ${resetEmail}!`);
       }
       setForgotStep(2);
     } catch (err) {
@@ -235,7 +239,6 @@ const Login = () => {
                       placeholder="Enter password (e.g. user123)"
                     />
                   </div>
-                  <p className="text-xs text-textSecondary">User password: <code className="text-primary font-mono">user123</code> (same password for all individual persons)</p>
                 </div>
 
                 <button
@@ -254,7 +257,7 @@ const Login = () => {
           )}
 
           {/* ADMIN LOGIN FORM (Gmail + Password) */}
-          {activeTab === 'admin' && (
+          {activeTab === 'user' ? null : (
             <form onSubmit={handleAdminSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-textSecondary">Admin Gmail</label>
@@ -268,7 +271,7 @@ const Login = () => {
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     className="input-field !pl-11"
-                    placeholder="bishu1maharjan@gmail.com"
+                    placeholder="Enter Admin Gmail"
                   />
                 </div>
               </div>
@@ -297,7 +300,6 @@ const Login = () => {
                     placeholder="••••••••"
                   />
                 </div>
-                <p className="text-xs text-textSecondary">Default admin: <code className="text-secondary font-mono">bishu1maharjan@gmail.com</code> / <code className="text-secondary font-mono">admin123</code></p>
               </div>
 
               <button

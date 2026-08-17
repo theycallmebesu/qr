@@ -451,22 +451,13 @@ const AdminPanel = () => {
                   className="glass-panel rounded-2xl p-6 relative flex flex-col justify-between hover:border-primary/40 transition-all group"
                 >
                   <div>
-                    <div className="flex items-center space-x-4 mb-4">
-                      <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-primary/60 shrink-0 bg-slate-800">
-                        {person.profileImage ? (
-                          <img src={person.profileImage} alt={person.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center text-primary">
-                            <User size={32} />
-                          </div>
-                        )}
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="h-10 w-10 rounded-xl bg-primary/20 border border-primary/40 shrink-0 flex items-center justify-center text-primary">
+                        <User size={22} />
                       </div>
                       <div className="overflow-hidden">
                         <h3 className="text-lg font-bold text-white truncate">{person.name}</h3>
                         <p className="text-xs text-textSecondary truncate">{person.email}</p>
-                        <span className="inline-block mt-1 text-[11px] font-medium px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
-                          {personBanks.length} Assigned Bank(s)
-                        </span>
                       </div>
                     </div>
 
@@ -702,40 +693,6 @@ const AdminPanel = () => {
             </h2>
 
             <form onSubmit={handleUserSubmit} className="space-y-4">
-              {/* Profile Image Uploaded from PC */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-textSecondary">Person Photo (Upload from PC)</label>
-                <div className="flex items-center space-x-4 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                  <div className="h-16 w-16 rounded-full bg-slate-800 overflow-hidden border-2 border-primary shrink-0 flex items-center justify-center">
-                    {userFormData.profileImage ? (
-                      <img src={userFormData.profileImage} alt="Person Preview" className="h-full w-full object-cover" />
-                    ) : (
-                      <User size={30} className="text-primary" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <label className="cursor-pointer inline-flex items-center space-x-2 py-2 px-3 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/40 rounded-lg text-xs font-semibold transition-all">
-                      <Upload size={14} />
-                      <span>Upload Picture from PC</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleUserProfileUpload}
-                        className="hidden"
-                      />
-                    </label>
-                    {userFormData.profileImage && (
-                      <button
-                        type="button"
-                        onClick={() => setUserFormData({ ...userFormData, profileImage: '' })}
-                        className="block mt-1 text-[11px] text-red-400 hover:underline"
-                      >
-                        Remove Photo
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
 
               {/* Person Full Name */}
               <div className="space-y-1.5">
