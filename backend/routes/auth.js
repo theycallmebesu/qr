@@ -254,11 +254,16 @@ router.post('/forgot-password', async (req, res) => {
     console.log(`========================================\n`);
 
     const transporter = createTransporter();
-    let emailSent = false;
 
-    if (transporter) {
-      // Execute email delivery reliably in background
-      transporter.sendMail({
+    if (!transporter) {
+      console.warn('EMAIL_USER or EMAIL_PASS is missing in server environment variables.');
+      return res.status(400).json({ 
+        message: 'Gmail sending is not configured on Render yet. Please add EMAIL_USER and EMAIL_PASS in Render Environment Variables.' 
+      });
+    }
+
+    try {
+      await transporter.sendMail({
         from: `"Bank QR Admin Portal" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
         to: cleanEmail,
         subject: `${verificationCode} is your Password Verification Code`,
@@ -274,19 +279,19 @@ router.post('/forgot-password', async (req, res) => {
             <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px;">This code will expire in 15 minutes. If you did not request this, you can safely ignore this email.</p>
           </div>
         `
-      }).then((info) => {
-        console.log(`[EMAIL SUCCESS] Sent to ${cleanEmail}: ${info.messageId}`);
-      }).catch((mailErr) => {
-        console.error('[EMAIL ERROR] Nodemailer failed:', mailErr);
       });
+      console.log(`[EMAIL SUCCESS] Sent to ${cleanEmail}`);
 
-      emailSent = true;
+      res.json({ 
+        message: `A 6-digit verification code has been sent to ${cleanEmail}. Please check your email inbox!`,
+        emailSent: true
+      });
+    } catch (mailErr) {
+      console.error('[EMAIL ERROR] Nodemailer failed:', mailErr.message);
+      return res.status(500).json({ 
+        message: `Gmail SMTP Error: ${mailErr.message}. Please verify EMAIL_USER and EMAIL_PASS in Render.` 
+      });
     }
-
-    res.json({ 
-      message: `A 6-digit verification code has been sent to ${cleanEmail}. Please check your email inbox!`,
-      emailSent: true
-    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

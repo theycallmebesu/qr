@@ -25,11 +25,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 const seedData = async () => {
     try {
-        // Remove all sample users and banks to start fresh
-        await User.deleteMany({ role: { $ne: 'admin' } });
-        await Bank.deleteMany({});
-
-        // Ensure Admin Users exist
+        // Ensure Admin Users exist without touching any existing user or bank data
         const adminEmails = ['bishu1maharjan@gmail.com', 'np03cy4a250116@heraldcollege.edu.np'];
         for (const email of adminEmails) {
             let adminUser = await User.findOne({ email });
