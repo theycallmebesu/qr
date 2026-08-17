@@ -182,30 +182,26 @@ router.post('/login', async (req, res) => {
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  const user = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : '';
+  const pass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : '';
+
+  if (user && pass) {
     return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      },
-      connectionTimeout: 4000,
-      greetingTimeout: 4000,
-      socketTimeout: 4000
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // SSL port 465 works reliably on Render
+      auth: { user, pass }
     });
   }
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT || 587,
-      secure: false,
+      port: process.env.SMTP_PORT || 465,
+      secure: true,
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      connectionTimeout: 4000,
-      greetingTimeout: 4000,
-      socketTimeout: 4000
+        pass: process.env.SMTP_PASS.replace(/\s+/g, '')
+      }
     });
   }
   return null;
