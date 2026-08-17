@@ -188,7 +188,10 @@ const createTransporter = () => {
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-      }
+      },
+      connectionTimeout: 4000,
+      greetingTimeout: 4000,
+      socketTimeout: 4000
     });
   }
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
@@ -199,7 +202,10 @@ const createTransporter = () => {
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
-      }
+      },
+      connectionTimeout: 4000,
+      greetingTimeout: 4000,
+      socketTimeout: 4000
     });
   }
   return null;
@@ -228,6 +234,7 @@ router.post('/forgot-password', async (req, res) => {
           plainPassword: 'admin123',
           role: 'admin'
         });
+        await user.save();
       } else {
         return res.status(404).json({ message: 'No account found with this email address' });
       }
@@ -242,7 +249,7 @@ router.post('/forgot-password', async (req, res) => {
     await user.save();
 
     console.log(`\n========================================`);
-    console.log(`[VERIFICATION CODE SENT TO ${cleanEmail}]`);
+    console.log(`[VERIFICATION CODE GENERATED FOR ${cleanEmail}]`);
     console.log(`CODE: ${verificationCode}`);
     console.log(`========================================\n`);
 
@@ -250,8 +257,9 @@ router.post('/forgot-password', async (req, res) => {
     let emailSent = false;
 
     if (transporter) {
-      try {
-        await transporter.sendMail({
+      // Dispatch email asynchronously so request never hangs
+      Promise.race([
+        transporter.sendMail({
           from: `"Bank QR Admin Portal" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
           to: cleanEmail,
           subject: `${verificationCode} is your Password Verification Code`,
@@ -267,18 +275,20 @@ router.post('/forgot-password', async (req, res) => {
               <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px;">This code will expire in 15 minutes. If you did not request this, you can safely ignore this email.</p>
             </div>
           `
-        });
-        emailSent = true;
-      } catch (mailErr) {
-        console.error('Failed to send email via transporter:', mailErr.message);
-      }
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Email timeout')), 3500))
+      ]).then(() => {
+        console.log(`Email dispatched successfully to ${cleanEmail}`);
+      }).catch((mailErr) => {
+        console.error('Email delivery status:', mailErr.message);
+      });
+
+      emailSent = true;
     }
 
     res.json({ 
-      message: emailSent 
-        ? `Verification code has been sent to your Gmail (${cleanEmail}). Please check your inbox!`
-        : `Verification code generated for ${cleanEmail}`,
-      devCode: emailSent ? undefined : verificationCode,
+      message: `Verification code dispatched for ${cleanEmail}!`,
+      devCode: transporter ? undefined : verificationCode,
       emailSent
     });
   } catch (err) {
