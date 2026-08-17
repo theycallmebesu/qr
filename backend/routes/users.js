@@ -18,7 +18,7 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
-// Get all non-admin users (for admin panel assignment)
+// Get all non-admin users (for admin panel assignment, with visible password)
 router.get('/', auth, async (req, res) => {
   try {
     const users = await User.find({ role: 'user' }).select('-passwordHash');
@@ -50,6 +50,7 @@ router.post('/', adminAuth, async (req, res) => {
       name,
       email: userEmail,
       passwordHash,
+      plainPassword: password,
       role: 'user',
       profileImage: profileImage || ''
     });
@@ -60,7 +61,8 @@ router.post('/', adminAuth, async (req, res) => {
       name: newUser.name,
       email: newUser.email,
       role: newUser.role,
-      profileImage: newUser.profileImage
+      profileImage: newUser.profileImage,
+      plainPassword: newUser.plainPassword
     });
   } catch (err) {
     console.error(err.message);
@@ -83,6 +85,7 @@ router.put('/:id', adminAuth, async (req, res) => {
     if (password) {
       const salt = await bcrypt.genSalt(10);
       user.passwordHash = await bcrypt.hash(password, salt);
+      user.plainPassword = password;
     }
 
     await user.save();
@@ -91,7 +94,8 @@ router.put('/:id', adminAuth, async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      profileImage: user.profileImage
+      profileImage: user.profileImage,
+      plainPassword: user.plainPassword
     });
   } catch (err) {
     console.error(err.message);

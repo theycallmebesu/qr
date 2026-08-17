@@ -5,12 +5,12 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-// User Login (Shared Password Verification & Individual Person Selection)
+// User Login (Password Verification & Person Selection)
 router.post('/login-user', async (req, res) => {
   const { password, personId } = req.body;
 
-  if (!password) {
-    return res.status(400).json({ message: 'Password is required' });
+  if (!password || !password.trim()) {
+    return res.status(400).json({ message: 'Invalid user password' });
   }
 
   const cleanPassword = password.trim();
@@ -18,28 +18,26 @@ router.post('/login-user', async (req, res) => {
   try {
     const allUsers = await User.find({ role: { $ne: 'admin' } });
     
-    // Check if password matches any user account or default shared user password user123
-    let isPasswordValid = false;
+    // Find all users whose password matches the entered password
+    const matchingUsers = [];
     for (const u of allUsers) {
-      const isMatch = await bcrypt.compare(cleanPassword, u.passwordHash);
+      const isMatch = await bcrypt.compare(cleanPassword, u.passwordHash) || u.plainPassword === cleanPassword;
       if (isMatch) {
-        isPasswordValid = true;
-        break;
+        matchingUsers.push(u);
       }
     }
 
-    if (!isPasswordValid && (cleanPassword === 'user123' || cleanPassword === 'password123')) {
-      isPasswordValid = true;
+    if (matchingUsers.length === 0) {
+      return res.status(400).json({ message: 'Invalid user password' });
     }
 
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: 'Invalid password' });
-    }
-
-    // If personId is provided, authenticate directly as that person
+    // If personId is provided, log in as that specific user
     let targetUser = null;
     if (personId) {
-      targetUser = await User.findById(personId);
+      targetUser = matchingUsers.find(u => u._id.toString() === personId.toString()) || await User.findById(personId);
+    } else if (matchingUsers.length === 1) {
+      // Single match -> log in directly
+      targetUser = matchingUsers[0];
     }
 
     if (targetUser && targetUser.role !== 'admin') {
@@ -64,8 +62,8 @@ router.post('/login-user', async (req, res) => {
       );
     }
 
-    // Return the list of individual persons for selection
-    const availablePersons = allUsers.map(u => ({
+    // Multiple users share the same password -> prompt user selection
+    const availablePersons = matchingUsers.map(u => ({
       _id: u._id,
       name: u.name,
       email: u.email,

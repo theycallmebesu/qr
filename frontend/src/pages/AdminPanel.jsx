@@ -190,7 +190,7 @@ const AdminPanel = () => {
     setUserFormData({
       name: userItem.name || '',
       email: userItem.email || '',
-      password: '', // leave empty unless changing
+      password: userItem.plainPassword || '',
       profileImage: userItem.profileImage || ''
     });
     setError('');
@@ -470,10 +470,10 @@ const AdminPanel = () => {
                       </div>
                     </div>
 
-                    <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 text-xs text-textSecondary space-y-1 mb-6">
-                      <div className="flex justify-between">
-                        <span>Role:</span>
-                        <span className="text-white capitalize">{person.role}</span>
+                    <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 text-xs text-textSecondary space-y-1.5 mb-6">
+                      <div className="flex justify-between items-center font-mono">
+                        <span className="text-textSecondary">User Password:</span>
+                        <span className="text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">{person.plainPassword || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Assigned Banks:</span>
