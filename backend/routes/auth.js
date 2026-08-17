@@ -95,14 +95,14 @@ router.post('/login-admin', async (req, res) => {
     let admin = await User.findOne({ email: cleanEmail });
     
     if (!admin) {
-      // Create admin on the fly if bishu1maharjan@gmail.com is logging in for first time
-      if (cleanEmail === 'bishu1maharjan@gmail.com') {
+      if (cleanEmail === 'bishu1maharjan@gmail.com' || cleanEmail === 'np03cy4a250116@heraldcollege.edu.np') {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(cleanPassword || 'admin123', salt);
         admin = new User({
           name: 'Bishu Maharjan (Admin)',
-          email: 'bishu1maharjan@gmail.com',
+          email: cleanEmail,
           passwordHash,
+          plainPassword: cleanPassword || 'admin123',
           role: 'admin'
         });
         await admin.save();
@@ -218,18 +218,18 @@ router.post('/forgot-password', async (req, res) => {
   try {
     let user = await User.findOne({ email: cleanEmail });
     if (!user) {
-      if (cleanEmail === 'bishu1maharjan@gmail.com') {
+      if (cleanEmail === 'bishu1maharjan@gmail.com' || cleanEmail === 'np03cy4a250116@heraldcollege.edu.np') {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash('admin123', salt);
         user = new User({
           name: 'Bishu Maharjan (Admin)',
-          email: 'bishu1maharjan@gmail.com',
+          email: cleanEmail,
           passwordHash,
           plainPassword: 'admin123',
           role: 'admin'
         });
       } else {
-        return res.status(404).json({ message: 'No account found with this Gmail address' });
+        return res.status(404).json({ message: 'No account found with this email address' });
       }
     }
 

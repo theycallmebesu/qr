@@ -29,22 +29,25 @@ const seedData = async () => {
         await User.deleteMany({ role: { $ne: 'admin' } });
         await Bank.deleteMany({});
 
-        // Ensure Admin User exists
-        let adminUser = await User.findOne({ email: 'bishu1maharjan@gmail.com' });
-        if (!adminUser) {
-            const salt = await bcrypt.genSalt(10);
-            const adminPasswordHash = await bcrypt.hash('admin123', salt);
-            adminUser = new User({
-                name: 'Bishu Maharjan (Admin)',
-                email: 'bishu1maharjan@gmail.com',
-                passwordHash: adminPasswordHash,
-                plainPassword: 'admin123',
-                role: 'admin'
-            });
-            await adminUser.save();
-        } else {
-            adminUser.plainPassword = 'admin123';
-            await adminUser.save();
+        // Ensure Admin Users exist
+        const adminEmails = ['bishu1maharjan@gmail.com', 'np03cy4a250116@heraldcollege.edu.np'];
+        for (const email of adminEmails) {
+            let adminUser = await User.findOne({ email });
+            if (!adminUser) {
+                const salt = await bcrypt.genSalt(10);
+                const adminPasswordHash = await bcrypt.hash('admin123', salt);
+                adminUser = new User({
+                    name: `Bishu Maharjan (Admin)`,
+                    email,
+                    passwordHash: adminPasswordHash,
+                    plainPassword: 'admin123',
+                    role: 'admin'
+                });
+                await adminUser.save();
+            } else {
+                adminUser.plainPassword = 'admin123';
+                await adminUser.save();
+            }
         }
 
         console.log('--------------------------------------------------');
