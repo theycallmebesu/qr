@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-textPrimary antialiased selection:bg-primary selection:text-white;
+  }
+}
+
+/* Micro-animations and custom utilities */
+@layer utilities {
+  .glass-panel {
+    @apply bg-surface/80 backdrop-blur-md border border-white/10 shadow-xl;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg bg-slate-900/50 border border-slate-700 text-textPrimary placeholder:text-textSecondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300;
+  }
+  .btn-primary {
+    @apply w-full py-3 px-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-lg shadow-lg hover:shadow-primary/30 transform hover:-translate-y-0.5 transition-all duration-300 active:translate-y-0;
+  }
+}
