@@ -257,30 +257,27 @@ router.post('/forgot-password', async (req, res) => {
     let emailSent = false;
 
     if (transporter) {
-      // Dispatch email asynchronously so request never hangs
-      Promise.race([
-        transporter.sendMail({
-          from: `"Bank QR Admin Portal" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
-          to: cleanEmail,
-          subject: `${verificationCode} is your Password Verification Code`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-              <h2 style="color: #6366f1; text-align: center; margin-bottom: 8px;">Bank QR Password Reset</h2>
-              <p style="font-size: 14px; color: #475569; text-align: center;">You requested a verification code for password reset on your admin account (${cleanEmail}).</p>
-              
-              <div style="background-color: #f1f5f9; border-radius: 10px; padding: 18px; text-align: center; margin: 24px 0; border: 1px dashed #cbd5e1;">
-                <span style="font-size: 32px; font-weight: 800; font-family: monospace; letter-spacing: 6px; color: #0f172a;">${verificationCode}</span>
-              </div>
-              
-              <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px;">This code will expire in 15 minutes. If you did not request this, you can safely ignore this email.</p>
+      // Execute email delivery reliably in background
+      transporter.sendMail({
+        from: `"Bank QR Admin Portal" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
+        to: cleanEmail,
+        subject: `${verificationCode} is your Password Verification Code`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+            <h2 style="color: #6366f1; text-align: center; margin-bottom: 8px;">Bank QR Password Reset</h2>
+            <p style="font-size: 14px; color: #475569; text-align: center;">You requested a verification code for password reset on your admin account (${cleanEmail}).</p>
+            
+            <div style="background-color: #f1f5f9; border-radius: 10px; padding: 18px; text-align: center; margin: 24px 0; border: 1px dashed #cbd5e1;">
+              <span style="font-size: 32px; font-weight: 800; font-family: monospace; letter-spacing: 6px; color: #0f172a;">${verificationCode}</span>
             </div>
-          `
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Email timeout')), 3500))
-      ]).then(() => {
-        console.log(`Email dispatched successfully to ${cleanEmail}`);
+            
+            <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px;">This code will expire in 15 minutes. If you did not request this, you can safely ignore this email.</p>
+          </div>
+        `
+      }).then((info) => {
+        console.log(`[EMAIL SUCCESS] Sent to ${cleanEmail}: ${info.messageId}`);
       }).catch((mailErr) => {
-        console.error('Email delivery status:', mailErr.message);
+        console.error('[EMAIL ERROR] Nodemailer failed:', mailErr);
       });
 
       emailSent = true;
