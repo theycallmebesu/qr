@@ -179,6 +179,32 @@ router.post('/login', async (req, res) => {
   }
 });
 
+const nodemailer = require('nodemailer');
+
+const createTransporter = () => {
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+  }
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT || 587,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+  }
+  return null;
+};
+
 // Forgot Password - Send 6-digit verification code to Gmail
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
@@ -192,7 +218,6 @@ router.post('/forgot-password', async (req, res) => {
   try {
     let user = await User.findOne({ email: cleanEmail });
     if (!user) {
-      // Auto-create user for password reset if target email is bishu1maharjan@gmail.com
       if (cleanEmail === 'bishu1maharjan@gmail.com') {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash('admin123', salt);
@@ -200,6 +225,7 @@ router.post('/forgot-password', async (req, res) => {
           name: 'Bishu Maharjan (Admin)',
           email: 'bishu1maharjan@gmail.com',
           passwordHash,
+          plainPassword: 'admin123',
           role: 'admin'
         });
       } else {
@@ -220,9 +246,40 @@ router.post('/forgot-password', async (req, res) => {
     console.log(`CODE: ${verificationCode}`);
     console.log(`========================================\n`);
 
+    const transporter = createTransporter();
+    let emailSent = false;
+
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: `"Bank QR Admin Portal" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
+          to: cleanEmail,
+          subject: `${verificationCode} is your Password Verification Code`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+              <h2 style="color: #6366f1; text-align: center; margin-bottom: 8px;">Bank QR Password Reset</h2>
+              <p style="font-size: 14px; color: #475569; text-align: center;">You requested a verification code for password reset on your admin account (${cleanEmail}).</p>
+              
+              <div style="background-color: #f1f5f9; border-radius: 10px; padding: 18px; text-align: center; margin: 24px 0; border: 1px dashed #cbd5e1;">
+                <span style="font-size: 32px; font-weight: 800; font-family: monospace; letter-spacing: 6px; color: #0f172a;">${verificationCode}</span>
+              </div>
+              
+              <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px;">This code will expire in 15 minutes. If you did not request this, you can safely ignore this email.</p>
+            </div>
+          `
+        });
+        emailSent = true;
+      } catch (mailErr) {
+        console.error('Failed to send email via transporter:', mailErr.message);
+      }
+    }
+
     res.json({ 
-      message: `Verification code generated and sent to ${cleanEmail}`,
-      devCode: verificationCode 
+      message: emailSent 
+        ? `Verification code has been sent to your Gmail (${cleanEmail}). Please check your inbox!`
+        : `Verification code generated for ${cleanEmail}`,
+      devCode: emailSent ? undefined : verificationCode,
+      emailSent
     });
   } catch (err) {
     console.error(err.message);

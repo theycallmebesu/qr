@@ -82,13 +82,12 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await api.post('/auth/forgot-password', { email: resetEmail });
-      const code = res.data.devCode || '';
-      setDevCodeHint(code);
-      if (code) {
-        setVerificationCode(code);
-        setResetMsg(`Verification code generated: ${code}`);
+      setResetMsg(res.data.message || `Verification code sent to ${resetEmail}!`);
+      setVerificationCode('');
+      if (res.data.devCode) {
+        setDevCodeHint(res.data.devCode);
       } else {
-        setResetMsg(`Verification code sent to ${resetEmail}!`);
+        setDevCodeHint('');
       }
       setForgotStep(2);
     } catch (err) {
