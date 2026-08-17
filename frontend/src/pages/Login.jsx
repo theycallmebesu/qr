@@ -7,7 +7,7 @@ import api from '../api';
 const Login = () => {
   const [activeTab, setActiveTab] = useState('user'); // 'user' | 'admin'
   const [password, setPassword] = useState('');
-  const [adminEmail, setAdminEmail] = useState('bishu1maharjan@gmail.com');
+  const [adminEmail, setAdminEmail] = useState('np03cy4a250116@heraldcollege.edu.np');
   const [adminPassword, setAdminPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,7 +15,7 @@ const Login = () => {
   // Forgot Password Modal State
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotStep, setForgotStep] = useState(1); // 1: Email, 2: Code & New Password
-  const [resetEmail, setResetEmail] = useState('bishu1maharjan@gmail.com');
+  const [resetEmail, setResetEmail] = useState('np03cy4a250116@heraldcollege.edu.np');
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [resetMsg, setResetMsg] = useState('');
@@ -364,7 +364,7 @@ const Login = () => {
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       className="input-field !pl-11"
-                      placeholder="bishu1maharjan@gmail.com"
+                      placeholder="np03cy4a250116@heraldcollege.edu.np"
                     />
                   </div>
                 </div>
