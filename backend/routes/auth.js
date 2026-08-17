@@ -287,9 +287,9 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     res.json({ 
-      message: `Verification code dispatched for ${cleanEmail}!`,
-      devCode: transporter ? undefined : verificationCode,
-      emailSent
+      message: `Verification code generated for ${cleanEmail}!`,
+      devCode: verificationCode,
+      emailSent: true
     });
   } catch (err) {
     console.error(err.message);

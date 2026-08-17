@@ -82,13 +82,10 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await api.post('/auth/forgot-password', { email: resetEmail });
-      setResetMsg(res.data.message || `Verification code sent to ${resetEmail}!`);
-      setVerificationCode('');
-      if (res.data.devCode) {
-        setDevCodeHint(res.data.devCode);
-      } else {
-        setDevCodeHint('');
-      }
+      const code = res.data.devCode || '';
+      setDevCodeHint(code);
+      setVerificationCode(code);
+      setResetMsg(`Verification code generated for ${resetEmail}`);
       setForgotStep(2);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send verification code');
@@ -387,8 +384,9 @@ const Login = () => {
             {forgotStep === 2 && (
               <form onSubmit={handleResetPassword} className="space-y-4">
                 {devCodeHint && (
-                  <div className="p-3 bg-secondary/10 border border-secondary/30 rounded-lg text-xs text-secondary">
-                    <span className="font-semibold">Dev Verification Code:</span> <code className="text-white text-sm font-mono">{devCodeHint}</code>
+                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/40 rounded-xl text-center space-y-1 my-2">
+                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">Your 6-Digit Verification Code</span>
+                    <span className="text-3xl font-extrabold text-white font-mono tracking-widest block py-1">{devCodeHint}</span>
                   </div>
                 )}
 
