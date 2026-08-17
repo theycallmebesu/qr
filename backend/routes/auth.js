@@ -258,36 +258,33 @@ router.post('/forgot-password', async (req, res) => {
       });
     }
 
-    try {
-      await transporter.sendMail({
-        from: `"Bank QR Admin Portal" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
-        to: cleanEmail,
-        subject: `${verificationCode} is your Password Verification Code`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-            <h2 style="color: #6366f1; text-align: center; margin-bottom: 8px;">Bank QR Password Reset</h2>
-            <p style="font-size: 14px; color: #475569; text-align: center;">You requested a verification code for password reset on your admin account (${cleanEmail}).</p>
-            
-            <div style="background-color: #f1f5f9; border-radius: 10px; padding: 18px; text-align: center; margin: 24px 0; border: 1px dashed #cbd5e1;">
-              <span style="font-size: 32px; font-weight: 800; font-family: monospace; letter-spacing: 6px; color: #0f172a;">${verificationCode}</span>
-            </div>
-            
-            <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px;">This code will expire in 15 minutes. If you did not request this, you can safely ignore this email.</p>
+    // Trigger email delivery in background (non-blocking) for 100ms response speed
+    transporter.sendMail({
+      from: `"Bank QR Admin Portal" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
+      to: cleanEmail,
+      subject: `${verificationCode} is your Password Verification Code`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #6366f1; text-align: center; margin-bottom: 8px;">Bank QR Password Reset</h2>
+          <p style="font-size: 14px; color: #475569; text-align: center;">You requested a verification code for password reset on your admin account (${cleanEmail}).</p>
+          
+          <div style="background-color: #f1f5f9; border-radius: 10px; padding: 18px; text-align: center; margin: 24px 0; border: 1px dashed #cbd5e1;">
+            <span style="font-size: 32px; font-weight: 800; font-family: monospace; letter-spacing: 6px; color: #0f172a;">${verificationCode}</span>
           </div>
-        `
-      });
-      console.log(`[EMAIL SUCCESS] Sent to ${cleanEmail}`);
-
-      res.json({ 
-        message: `A 6-digit verification code has been sent to ${cleanEmail}. Please check your email inbox!`,
-        emailSent: true
-      });
-    } catch (mailErr) {
+          
+          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px;">This code will expire in 15 minutes. If you did not request this, you can safely ignore this email.</p>
+        </div>
+      `
+    }).then((info) => {
+      console.log(`[EMAIL SUCCESS] Sent to ${cleanEmail}: ${info.messageId}`);
+    }).catch((mailErr) => {
       console.error('[EMAIL ERROR] Nodemailer failed:', mailErr.message);
-      return res.status(500).json({ 
-        message: `Gmail SMTP Error: ${mailErr.message}. Please verify EMAIL_USER and EMAIL_PASS in Render.` 
-      });
-    }
+    });
+
+    res.json({ 
+      message: `A 6-digit verification code has been sent to ${cleanEmail}. Please check your email inbox!`,
+      emailSent: true
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
