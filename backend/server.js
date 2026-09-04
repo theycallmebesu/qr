@@ -3,88 +3,104 @@ const dns = require('dns');
 try {
   dns.setServers(['8.8.8.8', '8.8.4.4']);
 } catch (e) {}
+
+const http = require('http');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const { Server } = require('socket.io');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const bcrypt = require('bcryptjs');
 
-const User = require('./models/User');
-const Bank = require('./models/Bank');
+const seedDatabase = require('./seed');
 
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+  }
+});
+
+// Attach io to express app so routes can broadcast events
+app.set('io', io);
+
+// Real-time socket connection handling
+io.on('connection', (socket) => {
+  console.log(`[Socket.io] Client connected: ${socket.id}`);
+
+  socket.on('join_role', (role) => {
+    socket.join(role);
+    console.log(`[Socket.io] Socket ${socket.id} joined room: ${role}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket.io] Client disconnected: ${socket.id}`);
+  });
+});
 
 // Middleware
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-const seedData = async () => {
-    try {
-        // Ensure Admin Users exist without touching any existing user or bank data
-        const adminEmails = ['bishu1maharjan@gmail.com', 'np03cy4a250116@heraldcollege.edu.np'];
-        for (const email of adminEmails) {
-            let adminUser = await User.findOne({ email });
-            if (!adminUser) {
-                const salt = await bcrypt.genSalt(10);
-                const adminPasswordHash = await bcrypt.hash('admin123', salt);
-                adminUser = new User({
-                    name: `Bishu Maharjan (Admin)`,
-                    email,
-                    passwordHash: adminPasswordHash,
-                    plainPassword: 'admin123',
-                    role: 'admin'
-                });
-                await adminUser.save();
-            } else {
-                adminUser.plainPassword = 'admin123';
-                await adminUser.save();
-            }
-        }
-
-        console.log('--------------------------------------------------');
-        console.log('Clean Database Initialized:');
-        console.log('Admin Gmail: bishu1maharjan@gmail.com | Password: admin123');
-        console.log('All sample users & banks removed.');
-        console.log('--------------------------------------------------');
-    } catch (err) {
-        console.error('Error seeding data', err);
-    }
-}
-
 // Connect Database
 const connectDB = async () => {
   try {
     let mongoUri = process.env.MONGO_URI;
-    
-    // For local dev without a real mongodb
-    if (!mongoUri || mongoUri.includes('127.0.0.1')) {
-        const mongoServer = await MongoMemoryServer.create();
-        mongoUri = mongoServer.getUri();
-        console.log(`Started memory server at ${mongoUri}`);
+
+    // Connect to provided Mongo URI
+    try {
+      if (mongoUri && !mongoUri.includes('127.0.0.1')) {
+        console.log('Connecting to MongoDB Atlas...');
+        await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 });
+        console.log('MongoDB Atlas Connected successfully!');
+      } else {
+        throw new Error('Using in-memory database');
+      }
+    } catch (atlasErr) {
+      console.warn('Atlas connection failed or timed out. Falling back to MongoDB Memory Server...', atlasErr.message);
+      const mongoServer = await MongoMemoryServer.create();
+      mongoUri = mongoServer.getUri();
+      await mongoose.connect(mongoUri);
+      console.log(`Started memory server at ${mongoUri}`);
     }
 
-    await mongoose.connect(mongoUri);
-    console.log('MongoDB Connected...');
-    
-    // Seed data
-    await seedData();
+    // Run seed data
+    await seedDatabase();
   } catch (err) {
-    console.error('Failed to connect to MongoDB', err.message);
+    console.error('Failed to initialize database:', err.message);
     process.exit(1);
   }
 };
+
 connectDB();
 
-// Define Routes
+// API Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/banks', require('./routes/banks'));
+app.use('/api/menu', require('./routes/menu'));
+app.use('/api/tables', require('./routes/tables'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/bills', require('./routes/bills'));
+app.use('/api/reports', require('./routes/reports'));
+app.use('/api/admin', require('./routes/admin'));
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'Restaurant Management API',
+    timestamp: new Date()
+  });
+});
 
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Restaurant API & Socket.io Server running on port ${PORT}`);
+});

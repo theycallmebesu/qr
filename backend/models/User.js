@@ -1,14 +1,24 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  name: { type: String, required: true, trim: true },
+  username: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  position: { 
+    type: String, 
+    required: true, 
+    trim: true,
+    default: 'Floor Waiter'
+  },
   passwordHash: { type: String, required: true },
   plainPassword: { type: String },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  profileImage: { type: String },
-  resetCode: { type: String },
-  resetCodeExpires: { type: Date },
+  role: { 
+    type: String, 
+    enum: ['admin', 'owner', 'waiter', 'chef'], 
+    default: 'waiter',
+    required: true 
+  },
+  active: { type: Boolean, default: true },
+  phone: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
 

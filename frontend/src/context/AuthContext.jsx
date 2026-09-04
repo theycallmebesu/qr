@@ -12,10 +12,10 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const res = await api.get('/users/me');
+          const res = await api.get('/auth/me');
           setUser(res.data);
         } catch (error) {
-          console.error("Token invalid or expired");
+          console.error("Token invalid or expired", error);
           localStorage.removeItem('token');
           setUser(null);
         }
@@ -25,8 +25,8 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const loginUser = async (password, personId = null) => {
-    const res = await api.post('/auth/login-user', { password, personId });
+  const login = async (username, password) => {
+    const res = await api.post('/auth/login', { username, password });
     if (res.data.token) {
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user);
@@ -34,10 +34,12 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   };
 
-  const loginAdmin = async (email, password) => {
-    const res = await api.post('/auth/login-admin', { email, password });
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
+  const quickLogin = async (role) => {
+    const res = await api.post('/auth/quick-login', { role });
+    if (res.data.token) {
+      localStorage.setItem('token', res.data.token);
+      setUser(res.data.user);
+    }
     return res.data;
   };
 
@@ -47,7 +49,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginUser, loginAdmin, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, quickLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );

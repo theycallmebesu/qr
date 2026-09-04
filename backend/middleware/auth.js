@@ -7,22 +7,36 @@ const auth = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
+    const cleanToken = token.replace(/^Bearer\s+/i, '');
+    const decoded = jwt.verify(cleanToken, process.env.JWT_SECRET || 'supersecretjwtkey12345');
     req.user = decoded.user;
     next();
   } catch (err) {
-    res.status(401).json({ message: 'Token is not valid' });
+    return res.status(401).json({ message: 'Token is invalid or expired' });
   }
 };
 
-const adminAuth = (req, res, next) => {
-  auth(req, res, () => {
-    if (req.user && req.user.role === 'admin') {
+const roleAuth = (allowedRoles = []) => {
+  return (req, res, next) => {
+    auth(req, res, () => {
+      if (!req.user) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      if (allowedRoles.length > 0 && !allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({ 
+          message: `Access denied: Role '${req.user.role}' is not authorized for this action` 
+        });
+      }
+
       next();
-    } else {
-      res.status(403).json({ message: 'Access denied: Admin privileges required' });
-    }
-  });
+    });
+  };
 };
 
-module.exports = { auth, adminAuth };
+const adminAuth = roleAuth(['admin']);
+const ownerAuth = roleAuth(['admin', 'owner']);
+const chefAuth = roleAuth(['admin', 'chef']);
+const waiterAuth = roleAuth(['admin', 'waiter']);
+
+module.exports = { auth, roleAuth, adminAuth, ownerAuth, chefAuth, waiterAuth };
