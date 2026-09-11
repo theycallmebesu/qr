@@ -2,37 +2,49 @@ import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
-import Navbar from './components/Navbar';
-import LiveAlertToast from './components/LiveAlertToast';
-import RoleRoute from './components/RoleRoute';
 
 import Login from './pages/Login';
-import WaiterDashboard from './pages/waiter/WaiterDashboard';
-import ChefKDS from './pages/chef/ChefKDS';
-import OwnerDashboard from './pages/owner/OwnerDashboard';
-import AdminDashboard from './pages/admin/AdminDashboard';
+import WaiterView from './pages/waiter/WaiterView';
+import KitchenView from './pages/kitchen/KitchenView';
+import ReceptionView from './pages/reception/ReceptionView';
+import AdminView from './pages/admin/AdminView';
 
-// Layout wrapper for authenticated dashboards
-const DashboardLayout = ({ children }) => {
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      <Navbar />
-      <LiveAlertToast />
-      <main className="flex-1">
-        {children}
-      </main>
-    </div>
-  );
+// Route Guard Component
+const ProtectedRoute = ({ allowedRoles = [], children }) => {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-amber-500 font-bold text-sm">
+        Authenticating station...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Admin has superuser access to all stations
+  if (user.role === 'admin') {
+    return children;
+  }
+
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    return <Navigate to={`/${user.role}`} replace />;
+  }
+
+  return children;
 };
 
-// Default index redirect based on user role
+// Root redirector based on authenticated user's role
 const RootRedirect = () => {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-amber-500">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-amber-500 font-bold text-sm">
+        Loading restaurant station...
       </div>
     );
   }
@@ -50,58 +62,52 @@ function App() {
       <SocketProvider>
         <Router>
           <Routes>
+            {/* Staff Authentication */}
             <Route path="/login" element={<Login />} />
 
-            {/* Waiter Floor View */}
+            {/* Waiter Station */}
             <Route
               path="/waiter"
               element={
-                <RoleRoute allowedRoles={['waiter', 'admin', 'owner']}>
-                  <DashboardLayout>
-                    <WaiterDashboard />
-                  </DashboardLayout>
-                </RoleRoute>
+                <ProtectedRoute allowedRoles={['waiter', 'admin']}>
+                  <WaiterView />
+                </ProtectedRoute>
               }
             />
 
-            {/* Chef Kitchen Display System (KDS) */}
+            {/* Kitchen KDS Station */}
             <Route
-              path="/chef"
+              path="/kitchen"
               element={
-                <RoleRoute allowedRoles={['chef', 'admin', 'owner']}>
-                  <DashboardLayout>
-                    <ChefKDS />
-                  </DashboardLayout>
-                </RoleRoute>
+                <ProtectedRoute allowedRoles={['kitchen', 'admin']}>
+                  <KitchenView />
+                </ProtectedRoute>
               }
             />
 
-            {/* Owner Analytics & Sales Reports */}
+            {/* Receptionist & Billing Station */}
             <Route
-              path="/owner"
+              path="/reception"
               element={
-                <RoleRoute allowedRoles={['owner', 'admin']}>
-                  <DashboardLayout>
-                    <OwnerDashboard />
-                  </DashboardLayout>
-                </RoleRoute>
+                <ProtectedRoute allowedRoles={['reception', 'admin']}>
+                  <ReceptionView />
+                </ProtectedRoute>
               }
             />
 
-            {/* Admin Management & System Audit */}
+            {/* Admin Station */}
             <Route
               path="/admin"
               element={
-                <RoleRoute allowedRoles={['admin']}>
-                  <DashboardLayout>
-                    <AdminDashboard />
-                  </DashboardLayout>
-                </RoleRoute>
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminView />
+                </ProtectedRoute>
               }
             />
 
-            {/* Fallback route */}
-            <Route path="*" element={<RootRedirect />} />
+            {/* Root / Default Redirect */}
+            <Route path="/" element={<RootRedirect />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
       </SocketProvider>

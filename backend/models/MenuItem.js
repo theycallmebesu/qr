@@ -5,14 +5,17 @@ const menuItemSchema = new mongoose.Schema({
   category: { 
     type: String, 
     required: true, 
-    enum: ['Starters', 'Mains', 'Pizzas', 'Desserts', 'Beverages', 'Sides'],
-    default: 'Mains'
+    default: 'Main',
+    trim: true
   },
   price: { type: Number, required: true, min: 0 },
   description: { type: String, default: '' },
-  image: { type: String, default: '' },
+  image: { 
+    type: String, 
+    default: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80' 
+  },
   inStock: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('MenuItem', menuItemSchema);
+module.exports = mongoose.model('MenuItem', menuItemSchema, 'menuItems');

@@ -1,103 +1,152 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { AuthContext } from './AuthContext';
+import { playKitchenBell, playCashRegister, playSuccessBeep } from '../utils/audioAlerts';
 
 export const SocketContext = createContext();
+
+// Nepali Singing Bowl / Kitchen Chime for Ready Alert
+export const playOrderReadyChime = () => {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const now = ctx.currentTime;
+
+    // Harmonic bell chime 1 (High tone)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(880, now);
+    osc1.frequency.exponentialRampToValueAtTime(587.33, now + 1.2);
+    gain1.gain.setValueAtTime(0.5, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 1.2);
+
+    // Harmonic bell chime 2
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(1174.66, now + 0.15);
+    osc2.frequency.exponentialRampToValueAtTime(440, now + 1.4);
+    gain2.gain.setValueAtTime(0.4, now + 0.15);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.15);
+    osc2.stop(now + 1.4);
+
+    // Vibrate device if mobile browser supports vibration
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate([200, 100, 200, 100, 400]);
+    }
+  } catch (e) {
+    console.warn('Audio chime error:', e);
+  }
+};
 
 export const SocketProvider = ({ children }) => {
   const { user } = useContext(AuthContext);
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
-  const [liveAlert, setLiveAlert] = useState(null);
+  const [readyAlert, setReadyAlert] = useState(null); // Full-screen popup for waiter
+  const [toastAlert, setToastAlert] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Play pleasant notification sound using Web Audio API
-  const playAlertSound = (type = 'success') => {
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+  const soundEnabledRef = useRef(soundEnabled);
+  soundEnabledRef.current = soundEnabled;
 
-      osc.type = 'sine';
-      if (type === 'ready') {
-        // High upbeat 2-tone chime
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // A5
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.4);
-      } else {
-        osc.frequency.setValueAtTime(440, ctx.currentTime);
-        osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.3);
-      }
-    } catch (e) {
-      // Audio context might be blocked prior to user interaction
-    }
-  };
+  const userRef = useRef(user);
+  userRef.current = user;
 
   useEffect(() => {
-    // Extract socket URL from API URL or default to port 5000
-    const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    const socketUrl = rawApiUrl.replace(/\/api\/?$/, '');
+    let socketUrl = 'http://localhost:5000';
+    if (import.meta.env.VITE_API_URL) {
+      socketUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
+    } else if (typeof window !== 'undefined' && window.location.hostname) {
+      socketUrl = `http://${window.location.hostname}:5000`;
+    }
 
     const newSocket = io(socketUrl, {
-      transports: ['websocket', 'polling'],
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1500
+      transports: ['polling', 'websocket'],
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      timeout: 10000
     });
 
     newSocket.on('connect', () => {
-      console.log('[Socket] Connected to server, ID:', newSocket.id);
       setConnected(true);
-      if (user?.role) {
-        newSocket.emit('join_role', user.role);
+      if (userRef.current) {
+        if (userRef.current.role) {
+          newSocket.emit('join_role', userRef.current.role);
+        }
+        if (userRef.current.id || userRef.current._id) {
+          newSocket.emit('join_user', userRef.current.id || userRef.current._id);
+        }
       }
     });
 
     newSocket.on('disconnect', () => {
-      console.log('[Socket] Disconnected from server');
       setConnected(false);
     });
 
-    // Global listener for order status notifications
-    newSocket.on('order:status_update', (order) => {
-      if (order.status === 'Ready') {
-        playAlertSound('ready');
-        setLiveAlert({
-          id: Date.now(),
-          type: 'ready',
-          title: `Table #${order.tableNumber} Food is READY!`,
-          message: `Order #${order.orderNumber} is prepared and ready for pick-up.`,
-          timestamp: new Date()
-        });
-      } else if (order.status === 'Cancelled') {
-        setLiveAlert({
-          id: Date.now(),
-          type: 'warning',
-          title: `Order #${order.orderNumber} Cancelled`,
-          message: `Order on Table #${order.tableNumber} was cancelled.`,
-          timestamp: new Date()
+    // Real-time listener: Order Ready Alert (specifically targeted to Waiter)
+    newSocket.on('order:ready_alert', (data) => {
+      const currentUser = userRef.current;
+      const currentUserId = currentUser?._id || currentUser?.id;
+      const isMyOrder = currentUserId && String(currentUserId) === String(data.waiterId);
+
+      // Trigger full-screen alert if this waiter's order or if logged in as admin/waiter
+      if (isMyOrder || currentUser?.role === 'waiter' || currentUser?.role === 'admin') {
+        if (soundEnabledRef.current) {
+          playOrderReadyChime();
+        }
+        setReadyAlert({
+          ...data,
+          receivedAt: new Date()
         });
       }
+
+      setToastAlert({
+        id: Date.now(),
+        type: 'ready',
+        title: `Food is Ready: Table #${data.tableNumber}`,
+        message: `Order #${data.orderNumber} is hot and ready for pick-up!`,
+        timestamp: new Date()
+      });
     });
 
+    // Real-time listener: New Order placed (for Kitchen)
     newSocket.on('order:new', (order) => {
-      playAlertSound('new');
-      setLiveAlert({
+      if (userRef.current?.role === 'kitchen' || userRef.current?.role === 'admin') {
+        if (soundEnabledRef.current) {
+          playKitchenBell();
+        }
+      }
+      setToastAlert({
         id: Date.now(),
-        type: 'info',
+        type: 'new_order',
         title: `New Order: Table #${order.tableNumber}`,
-        message: `${order.items.length} item(s) • Total: $${order.totalPrice?.toFixed(2)}`,
+        message: `${order.items?.length || 0} items ordered by ${order.waiterName || 'Staff'}`,
+        timestamp: new Date()
+      });
+    });
+
+    // Real-time listener: Payment completed (for Receptionist & Admin)
+    newSocket.on('payment:completed', (payment) => {
+      if (userRef.current?.role === 'reception' || userRef.current?.role === 'admin') {
+        if (soundEnabledRef.current) {
+          playCashRegister();
+        }
+      }
+      setToastAlert({
+        id: Date.now(),
+        type: 'payment',
+        title: `Bill Settled: Table #${payment.tableNumber}`,
+        message: `Invoice #${payment.invoiceNumber} paid Rs. ${payment.total}`,
         timestamp: new Date()
       });
     });
@@ -109,23 +158,40 @@ export const SocketProvider = ({ children }) => {
     };
   }, []);
 
-  // Update room when user changes
+  // Update rooms whenever logged-in user changes
   useEffect(() => {
-    if (socket && connected && user?.role) {
-      socket.emit('join_role', user.role);
+    if (socket && connected && user) {
+      if (user.role) {
+        socket.emit('join_role', user.role);
+      }
+      if (user.id || user._id) {
+        socket.emit('join_user', user.id || user._id);
+      }
     }
   }, [user, socket, connected]);
 
-  // Auto clear alert after 6 seconds
+  // Clear toast after 5 seconds
   useEffect(() => {
-    if (liveAlert) {
-      const timer = setTimeout(() => setLiveAlert(null), 6000);
+    if (toastAlert) {
+      const timer = setTimeout(() => setToastAlert(null), 5000);
       return () => clearTimeout(timer);
     }
-  }, [liveAlert]);
+  }, [toastAlert]);
 
   return (
-    <SocketContext.Provider value={{ socket, connected, liveAlert, clearAlert: () => setLiveAlert(null) }}>
+    <SocketContext.Provider
+      value={{
+        socket,
+        connected,
+        readyAlert,
+        toastAlert,
+        soundEnabled,
+        setSoundEnabled,
+        dismissReadyAlert: () => setReadyAlert(null),
+        clearToastAlert: () => setToastAlert(null),
+        playChime: playOrderReadyChime
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );

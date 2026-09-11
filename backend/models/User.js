@@ -10,16 +10,15 @@ const userSchema = new mongoose.Schema({
     default: 'Floor Waiter'
   },
   passwordHash: { type: String, required: true },
-  plainPassword: { type: String },
   role: { 
     type: String, 
-    enum: ['admin', 'owner', 'waiter', 'chef'], 
+    enum: ['admin', 'waiter', 'kitchen', 'reception', 'chef', 'receptionist', 'owner'], 
     default: 'waiter',
     required: true 
   },
   active: { type: Boolean, default: true },
-  phone: { type: String },
+  phone: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('User', userSchema, 'users');

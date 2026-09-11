@@ -3,48 +3,35 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { auth } = require('../middleware/auth');
+const { auth, normalizeRole } = require('../middleware/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey12345';
 
-// Unified Login Route (Login using Username or Name)
+// Unified Login Route (Username + Password only)
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    const identifier = (username || req.body.identifier || req.body.email || '').toLowerCase().trim();
+    const cleanUsername = (username || '').toLowerCase().trim();
 
-    if (!identifier || !password) {
+    if (!cleanUsername || !password) {
       return res.status(400).json({ message: 'Username and password are required' });
     }
 
-    // Match by username or name
-    const user = await User.findOne({
-      $or: [
-        { username: identifier },
-        { name: new RegExp('^' + identifier + '$', 'i') }
-      ]
-    });
-
+    const user = await User.findOne({ username: cleanUsername });
     if (!user) {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
 
     if (user.active === false) {
-      return res.status(403).json({ message: 'Account is deactivated. Contact Administrator.' });
+      return res.status(403).json({ message: 'Account has been deactivated. Please contact your manager.' });
     }
 
-    let isMatch = false;
-    if (user.passwordHash) {
-      isMatch = await bcrypt.compare(password, user.passwordHash);
-    }
-    // Fallback for plainPassword in testing/dev
-    if (!isMatch && user.plainPassword && user.plainPassword === password) {
-      isMatch = true;
-    }
-
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
+
+    const normalizedRole = normalizeRole(user.role);
 
     const payload = {
       user: {
@@ -52,7 +39,7 @@ router.post('/login', async (req, res) => {
         name: user.name,
         username: user.username,
         position: user.position,
-        role: user.role,
+        role: normalizedRole,
         active: user.active
       }
     };
@@ -61,7 +48,9 @@ router.post('/login', async (req, res) => {
       if (err) throw err;
       res.json({
         token,
-        user: payload.user
+        user: payload.user,
+        role: normalizedRole,
+        redirectTo: `/${normalizedRole}`
       });
     });
   } catch (err) {
@@ -70,18 +59,32 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Quick Demo Login for instant testing of all 4 roles
+// Quick Role Login for convenient role-testing
 router.post('/quick-login', async (req, res) => {
   try {
-    const { role } = req.body;
-    if (!['admin', 'owner', 'waiter', 'chef'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role specified' });
+    let { role } = req.body;
+    if (!role) {
+      return res.status(400).json({ message: 'Role is required' });
     }
 
-    const user = await User.findOne({ role, active: true });
-    if (!user) {
-      return res.status(404).json({ message: `No active demo user found for role: ${role}` });
+    role = normalizeRole(role);
+    const validRoles = ['admin', 'waiter', 'kitchen', 'reception'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: `Invalid role: ${role}` });
     }
+
+    // Find first active user with this role or legacy equivalent
+    const searchRoles = [role];
+    if (role === 'kitchen') searchRoles.push('chef');
+    if (role === 'reception') searchRoles.push('receptionist');
+    if (role === 'admin') searchRoles.push('owner');
+
+    const user = await User.findOne({ role: { $in: searchRoles }, active: true });
+    if (!user) {
+      return res.status(404).json({ message: `No active staff found for role: ${role}` });
+    }
+
+    const normalizedRole = normalizeRole(user.role);
 
     const payload = {
       user: {
@@ -89,7 +92,7 @@ router.post('/quick-login', async (req, res) => {
         name: user.name,
         username: user.username,
         position: user.position,
-        role: user.role,
+        role: normalizedRole,
         active: user.active
       }
     };
@@ -98,7 +101,9 @@ router.post('/quick-login', async (req, res) => {
       if (err) throw err;
       res.json({
         token,
-        user: payload.user
+        user: payload.user,
+        role: normalizedRole,
+        redirectTo: `/${normalizedRole}`
       });
     });
   } catch (err) {
@@ -107,14 +112,16 @@ router.post('/quick-login', async (req, res) => {
   }
 });
 
-// Get current logged-in user
+// Get current authenticated user
 router.get('/me', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-passwordHash -plainPassword');
+    const user = await User.findById(req.user.id).select('-passwordHash');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+    const userObj = user.toObject();
+    userObj.role = normalizeRole(userObj.role);
+    res.json(userObj);
   } catch (err) {
     console.error('Fetch me error:', err);
     res.status(500).json({ message: 'Server error' });

@@ -29,16 +29,23 @@ app.set('io', io);
 
 // Real-time socket connection handling
 io.on('connection', (socket) => {
-  console.log(`[Socket.io] Client connected: ${socket.id}`);
-
+  // Join staff role room (kitchen, waiter, reception, admin)
   socket.on('join_role', (role) => {
-    socket.join(role);
-    console.log(`[Socket.io] Socket ${socket.id} joined room: ${role}`);
+    let cleanRole = role;
+    if (role === 'chef') cleanRole = 'kitchen';
+    if (role === 'receptionist') cleanRole = 'reception';
+    if (role === 'owner') cleanRole = 'admin';
+    socket.join(cleanRole);
   });
 
-  socket.on('disconnect', () => {
-    console.log(`[Socket.io] Client disconnected: ${socket.id}`);
+  // Join individual user room for private waiter alerts
+  socket.on('join_user', (userId) => {
+    if (userId) {
+      socket.join(`user_${userId}`);
+    }
   });
+
+  socket.on('disconnect', () => {});
 });
 
 // Middleware
@@ -55,7 +62,6 @@ const connectDB = async () => {
   try {
     let mongoUri = process.env.MONGO_URI;
 
-    // Connect to provided Mongo URI
     try {
       if (mongoUri && !mongoUri.includes('127.0.0.1')) {
         console.log('Connecting to MongoDB Atlas...');
@@ -87,7 +93,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/menu', require('./routes/menu'));
 app.use('/api/tables', require('./routes/tables'));
 app.use('/api/orders', require('./routes/orders'));
-app.use('/api/bills', require('./routes/bills'));
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/bills', require('./routes/payments')); // Alias /api/bills to payments
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/admin', require('./routes/admin'));
 
@@ -95,12 +102,12 @@ app.use('/api/admin', require('./routes/admin'));
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
-    service: 'Restaurant Management API',
+    service: 'Nepali Restaurant Management API',
     timestamp: new Date()
   });
 });
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Restaurant API & Socket.io Server running on port ${PORT}`);
+  console.log(`Nepali Restaurant API & Socket.io Server running on port ${PORT}`);
 });

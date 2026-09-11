@@ -4,7 +4,7 @@ const MenuItem = require('../models/MenuItem');
 const { auth, adminAuth, roleAuth } = require('../middleware/auth');
 const { logActivity } = require('../utils/logger');
 
-// Get all menu items (optionally filter by inStock or category)
+// Get all menu items (accessible by all authenticated staff)
 router.get('/', auth, async (req, res) => {
   try {
     const { category, inStockOnly } = req.query;
@@ -28,15 +28,15 @@ router.post('/', adminAuth, async (req, res) => {
   try {
     const { name, category, price, description, image, inStock } = req.body;
     if (!name || price === undefined) {
-      return res.status(400).json({ message: 'Name and price are required' });
+      return res.status(400).json({ message: 'Item name and price in NPR are required' });
     }
 
     const item = new MenuItem({
       name: name.trim(),
-      category: category || 'Mains',
-      price: Number(price),
+      category: category || 'Main',
+      price: Math.max(0, Number(price)),
       description: description || '',
-      image: image || '',
+      image: image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
       inStock: inStock !== undefined ? inStock : true
     });
 
@@ -47,7 +47,7 @@ router.post('/', adminAuth, async (req, res) => {
       actionType: 'MENU_ITEM_CREATED',
       targetType: 'MenuItem',
       targetId: item._id,
-      details: `Added new dish "${item.name}" ($${item.price.toFixed(2)}) in ${item.category}`
+      details: `Added dish "${item.name}" (Rs. ${item.price}) under ${item.category}`
     });
 
     const io = req.app.get('io');
@@ -71,7 +71,7 @@ router.put('/:id', adminAuth, async (req, res) => {
 
     if (name) item.name = name.trim();
     if (category) item.category = category;
-    if (price !== undefined) item.price = Number(price);
+    if (price !== undefined) item.price = Math.max(0, Number(price));
     if (description !== undefined) item.description = description;
     if (image !== undefined) item.image = image;
     if (inStock !== undefined) item.inStock = inStock;
@@ -83,7 +83,7 @@ router.put('/:id', adminAuth, async (req, res) => {
       actionType: 'MENU_ITEM_UPDATED',
       targetType: 'MenuItem',
       targetId: item._id,
-      details: `Updated dish "${item.name}" (Price: $${item.price.toFixed(2)}, Category: ${item.category})`
+      details: `Updated dish "${item.name}" (Rs. ${item.price})`
     });
 
     const io = req.app.get('io');
@@ -96,8 +96,8 @@ router.put('/:id', adminAuth, async (req, res) => {
   }
 });
 
-// Toggle In Stock / Out of Stock (Chef, Admin, Owner)
-router.patch('/:id/toggle-stock', roleAuth(['admin', 'chef', 'owner']), async (req, res) => {
+// Toggle In Stock / Out of Stock (Admin and Kitchen)
+router.patch('/:id/toggle-stock', roleAuth(['admin', 'kitchen']), async (req, res) => {
   try {
     const item = await MenuItem.findById(req.params.id);
     if (!item) {
@@ -112,7 +112,7 @@ router.patch('/:id/toggle-stock', roleAuth(['admin', 'chef', 'owner']), async (r
       actionType: 'MENU_ITEM_STOCK_TOGGLED',
       targetType: 'MenuItem',
       targetId: item._id,
-      details: `Marked dish "${item.name}" as ${item.inStock ? 'IN STOCK' : 'OUT OF STOCK'}`
+      details: `Toggled "${item.name}" stock: ${item.inStock ? 'IN-STOCK' : 'OUT-OF-STOCK'}`
     });
 
     const io = req.app.get('io');
@@ -121,7 +121,7 @@ router.patch('/:id/toggle-stock', roleAuth(['admin', 'chef', 'owner']), async (r
     res.json(item);
   } catch (err) {
     console.error('Toggle stock error:', err);
-    res.status(500).json({ message: 'Failed to toggle item availability' });
+    res.status(500).json({ message: 'Failed to toggle availability' });
   }
 });
 
@@ -144,7 +144,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
     const io = req.app.get('io');
     if (io) io.emit('menu:update', { action: 'delete', id: req.params.id });
 
-    res.json({ message: 'Menu item removed successfully' });
+    res.json({ message: 'Menu item deleted successfully' });
   } catch (err) {
     console.error('Delete menu item error:', err);
     res.status(500).json({ message: 'Failed to delete menu item' });

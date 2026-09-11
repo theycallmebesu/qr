@@ -35,8 +35,8 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// Generate and close bill (Waiter, Admin, Owner)
-router.post('/close', roleAuth(['waiter', 'admin', 'owner']), async (req, res) => {
+// Generate and close bill (Receptionist, Admin, Owner, Waiter fallback)
+router.post('/close', roleAuth(['receptionist', 'admin', 'owner', 'waiter']), async (req, res) => {
   try {
     const { orderId, paymentMethod, discountAmount } = req.body;
 
@@ -104,7 +104,7 @@ router.post('/close', roleAuth(['waiter', 'admin', 'owner']), async (req, res) =
       actionType: 'BILL_PAID',
       targetType: 'Bill',
       targetId: bill._id,
-      details: `${req.user.name} settled bill ${bill.billNumber} for Table #${order.tableNumber} ($${bill.total.toFixed(2)} via ${bill.paymentMethod})`
+      details: `${req.user.name} settled bill ${bill.billNumber} for Table #${order.tableNumber} (Rs. ${bill.total.toFixed(2)} via ${bill.paymentMethod})`
     });
 
     const populatedBill = await Bill.findById(bill._id)
@@ -145,7 +145,7 @@ router.patch('/:id/cancel', roleAuth(['owner', 'admin']), async (req, res) => {
       actionType: 'BILL_CANCELLED',
       targetType: 'Bill',
       targetId: bill._id,
-      details: `${req.user.name} (${req.user.role}) cancelled Bill #${bill.billNumber} ($${bill.total.toFixed(2)})`
+      details: `${req.user.name} (${req.user.role}) cancelled Bill #${bill.billNumber} (Rs. ${bill.total.toFixed(2)})`
     });
 
     const io = req.app.get('io');
