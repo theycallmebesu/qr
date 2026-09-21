@@ -1,6 +1,14 @@
 import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import dns from 'dns';
+
+// Fix for Windows DNS resolution for mongodb+srv
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+} catch {
+  // Ignore if not supported
+}
 
 // Load environment variables from .env.local or .env
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
