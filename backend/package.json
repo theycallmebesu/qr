@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "build": "tsc",
+    "postinstall": "tsc",
     "start": "node server.js",
     "dev": "tsx watch src/index.ts",
     "seed": "tsx src/scripts/seed.ts"

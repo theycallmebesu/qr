@@ -1,0 +1,266 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SAMPLE_HARDWARE_ITEMS = void 0;
+const express_1 = require("express");
+const Item_1 = __importDefault(require("../models/Item"));
+const Tag_1 = __importDefault(require("../models/Tag"));
+const db_1 = require("../config/db");
+const router = (0, express_1.Router)();
+// Sample starter inventory for Shree Pashupatinath Hardware
+exports.SAMPLE_HARDWARE_ITEMS = [
+    {
+        name: 'Shivam OPC Cement 53 Grade (50kg)',
+        price: 780,
+        unit: 'bag',
+        tag: 'Cement',
+        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
+        description: 'High strength premium OPC cement for strong construction foundation and RCC casting.',
+        inStock: true,
+    },
+    {
+        name: 'Hetauda PPC Cement (50kg)',
+        price: 680,
+        unit: 'bag',
+        tag: 'Cement',
+        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
+        description: 'General purpose Portland Pozzolana Cement for masonry, plaster, and flooring.',
+        inStock: true,
+    },
+    {
+        name: 'Jagdamba Fe 500D TMT Steel Rod (12mm)',
+        price: 98,
+        unit: 'kg',
+        tag: 'Steel Rod',
+        imageUrl: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80',
+        description: 'Ductile high-yield TMT rebar for earthquake-resistant pillars and beams.',
+        inStock: true,
+    },
+    {
+        name: 'Laxmi Steels TMT Rod (16mm)',
+        price: 99,
+        unit: 'kg',
+        tag: 'Steel Rod',
+        imageUrl: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80',
+        description: 'Heavy structural reinforcement steel rod.',
+        inStock: true,
+    },
+    {
+        name: 'Binding Wire / Rod Wire',
+        price: 130,
+        unit: 'kg',
+        tag: 'Rod',
+        imageUrl: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=600&auto=format&fit=crop&q=80',
+        description: 'Soft annealed iron wire for binding reinforcement rebar nets.',
+        inStock: true,
+    },
+    {
+        name: 'Panchakanya CPVC Pipe 1 inch (Class 1)',
+        price: 480,
+        unit: 'piece (10ft)',
+        tag: 'Pipes',
+        imageUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&auto=format&fit=crop&q=80',
+        description: 'Hot & cold potable water supply CPVC pipe, UV-resistant and durable.',
+        inStock: true,
+    },
+    {
+        name: 'PVC Drainage Pipe 4 inch (6kg)',
+        price: 920,
+        unit: 'piece (10ft)',
+        tag: 'Pipes',
+        imageUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&auto=format&fit=crop&q=80',
+        description: 'Heavy duty underground soil and wastewater drainage pipe.',
+        inStock: true,
+    },
+    {
+        name: 'River Washed Sand (Baluwa) - Local Clean',
+        price: 18500,
+        unit: 'Tipper (450 cu.ft)',
+        tag: 'Baluwa',
+        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
+        description: 'Fine river-washed silica sand for plastering, slab casting, and brickwork.',
+        inStock: true,
+    },
+    {
+        name: 'Crushed Stone Aggregate (Gitti 20mm)',
+        price: 21000,
+        unit: 'Tipper (450 cu.ft)',
+        tag: 'Gitti',
+        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
+        description: 'High grade machine-crushed blue metal aggregate for pillar & RCC concrete.',
+        inStock: true,
+    },
+    {
+        name: 'Asian Paints Apex Weatherproof Exterior (20L)',
+        price: 7400,
+        unit: 'bucket (20L)',
+        tag: 'Paint',
+        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
+        description: 'Exterior emulsion with silicone additives to prevent algae and moisture peeling.',
+        inStock: true,
+    },
+    {
+        name: 'Heavy Duty Chrome Brass Bibcock Tap',
+        price: 650,
+        unit: 'piece',
+        tag: 'Sanitary',
+        imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&auto=format&fit=crop&q=80',
+        description: 'Solid brass quarter-turn water tap with mirror chrome finish.',
+        inStock: true,
+    },
+    {
+        name: 'Stainless Steel Wood Screws Box (3 inch)',
+        price: 320,
+        unit: 'box (100 pcs)',
+        tag: 'Fittings & Tools',
+        imageUrl: 'https://images.unsplash.com/photo-1586864387789-628af9feed72?w=600&auto=format&fit=crop&q=80',
+        description: 'Rustproof high-torque wood screws for roofing and carpentry framing.',
+        inStock: true,
+    }
+];
+// GET /api/items - Retrieve all items with search and tag filters
+router.get('/', async (req, res) => {
+    try {
+        await (0, db_1.connectDB)();
+        const { tag, search } = req.query;
+        const query = {};
+        if (tag && tag !== 'All') {
+            query.tag = { $regex: new RegExp(`^${String(tag).trim()}$`, 'i') };
+        }
+        if (search && String(search).trim()) {
+            const searchRegex = new RegExp(String(search).trim(), 'i');
+            query.$or = [
+                { name: { $regex: searchRegex } },
+                { tag: { $regex: searchRegex } },
+                { description: { $regex: searchRegex } }
+            ];
+        }
+        let items = await Item_1.default.find(query).sort({ updatedAt: -1, createdAt: -1 }).lean();
+        // Auto-seed if database has 0 items
+        if (items.length === 0 && !tag && !search) {
+            await Item_1.default.insertMany(exports.SAMPLE_HARDWARE_ITEMS);
+            // Ensure all tags exist in Tag model
+            for (const item of exports.SAMPLE_HARDWARE_ITEMS) {
+                await Tag_1.default.findOneAndUpdate({ name: item.tag }, { name: item.tag }, { upsert: true });
+            }
+            items = await Item_1.default.find({}).sort({ updatedAt: -1 }).lean();
+        }
+        return res.json({ success: true, count: items.length, items });
+    }
+    catch (error) {
+        console.error('Error fetching items:', error);
+        // Return sample items as offline fallback
+        let filtered = [...exports.SAMPLE_HARDWARE_ITEMS];
+        if (req.query.tag && req.query.tag !== 'All') {
+            filtered = filtered.filter(i => i.tag.toLowerCase() === String(req.query.tag).toLowerCase());
+        }
+        if (req.query.search) {
+            const q = String(req.query.search).toLowerCase();
+            filtered = filtered.filter(i => i.name.toLowerCase().includes(q) || i.tag.toLowerCase().includes(q));
+        }
+        return res.json({
+            success: true,
+            count: filtered.length,
+            items: filtered.map((item, idx) => ({ ...item, _id: `offline-${idx}` })),
+            fallback: true
+        });
+    }
+});
+// GET /api/items/:id - Retrieve single item
+router.get('/:id', async (req, res) => {
+    try {
+        await (0, db_1.connectDB)();
+        const item = await Item_1.default.findById(req.params.id);
+        if (!item) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+        return res.json({ success: true, item });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, message: 'Error retrieving item' });
+    }
+});
+// POST /api/items - Add a new item
+router.post('/', async (req, res) => {
+    try {
+        await (0, db_1.connectDB)();
+        const { name, price, unit, tag, imageUrl, description, inStock } = req.body;
+        if (!name || price === undefined || !tag) {
+            return res.status(400).json({
+                success: false,
+                message: 'Name, price, and tag are required fields',
+            });
+        }
+        const trimmedTag = String(tag).trim();
+        // Auto-create tag if not exists
+        await Tag_1.default.findOneAndUpdate({ name: trimmedTag }, { name: trimmedTag }, { upsert: true });
+        const newItem = await Item_1.default.create({
+            name: String(name).trim(),
+            price: Number(price),
+            unit: unit ? String(unit).trim() : 'piece',
+            tag: trimmedTag,
+            imageUrl: imageUrl || '',
+            description: description ? String(description).trim() : '',
+            inStock: inStock !== undefined ? Boolean(inStock) : true,
+        });
+        return res.status(201).json({ success: true, message: 'Item added successfully', item: newItem });
+    }
+    catch (error) {
+        console.error('Error creating item:', error);
+        return res.status(500).json({ success: false, message: 'Failed to create item' });
+    }
+});
+// PUT /api/items/:id - Update item
+router.put('/:id', async (req, res) => {
+    try {
+        await (0, db_1.connectDB)();
+        const { id } = req.params;
+        const { name, price, unit, tag, imageUrl, description, inStock } = req.body;
+        const updateData = {};
+        if (name !== undefined)
+            updateData.name = String(name).trim();
+        if (price !== undefined)
+            updateData.price = Number(price);
+        if (unit !== undefined)
+            updateData.unit = String(unit).trim();
+        if (tag !== undefined) {
+            updateData.tag = String(tag).trim();
+            // Ensure tag is recorded
+            await Tag_1.default.findOneAndUpdate({ name: updateData.tag }, { name: updateData.tag }, { upsert: true });
+        }
+        if (imageUrl !== undefined)
+            updateData.imageUrl = imageUrl;
+        if (description !== undefined)
+            updateData.description = String(description).trim();
+        if (inStock !== undefined)
+            updateData.inStock = Boolean(inStock);
+        const updatedItem = await Item_1.default.findByIdAndUpdate(id, updateData, { new: true });
+        if (!updatedItem) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+        return res.json({ success: true, message: 'Item updated successfully', item: updatedItem });
+    }
+    catch (error) {
+        console.error('Error updating item:', error);
+        return res.status(500).json({ success: false, message: 'Failed to update item' });
+    }
+});
+// DELETE /api/items/:id - Delete item
+router.delete('/:id', async (req, res) => {
+    try {
+        await (0, db_1.connectDB)();
+        const { id } = req.params;
+        const deleted = await Item_1.default.findByIdAndDelete(id);
+        if (!deleted) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+        return res.json({ success: true, message: 'Item deleted successfully' });
+    }
+    catch (error) {
+        console.error('Error deleting item:', error);
+        return res.status(500).json({ success: false, message: 'Failed to delete item' });
+    }
+});
+exports.default = router;
