@@ -10,7 +10,7 @@ import uploadRoutes from './routes/uploadRoutes';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 // Enable CORS for frontend (Vercel & Local development)
 app.use(
@@ -25,7 +25,7 @@ app.use(
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Health check endpoint
+// Health check endpoint (Render pings this)
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
@@ -45,10 +45,12 @@ app.use('/api/tags', tagRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// Connect to MongoDB & Start server
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 Shree Pashupatinath Hardware API running on port ${PORT}`);
+// Start server immediately on 0.0.0.0 so Render detects port binding instantly
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Shree Pashupatinath Hardware API listening on 0.0.0.0:${PORT}`);
+  // Connect to database in the background without blocking server startup
+  connectDB().catch((err) => {
+    console.error('Initial DB connection attempt failed:', err);
   });
 });
 

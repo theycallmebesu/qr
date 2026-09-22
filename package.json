@@ -9,7 +9,8 @@
     "dev:frontend": "npm run dev --prefix frontend",
     "build:frontend": "npm run build --prefix frontend",
     "build:backend": "npm run build --prefix backend",
-    "build": "npm run build:frontend && npm run build:backend",
+    "build": "npm run build --prefix frontend",
+    "start": "npm run start --prefix backend",
     "seed": "npm run seed --prefix backend"
   }
 }
