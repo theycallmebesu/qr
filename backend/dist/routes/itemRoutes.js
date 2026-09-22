@@ -1,43 +1,11 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SAMPLE_HARDWARE_ITEMS = void 0;
 const express_1 = require("express");
+const mongoose_1 = __importDefault(require("mongoose"));
 const Item_1 = __importDefault(require("../models/Item"));
 const Tag_1 = __importDefault(require("../models/Tag"));
 const db_1 = require("../config/db");
@@ -46,15 +14,17 @@ const router = (0, express_1.Router)();
 exports.SAMPLE_HARDWARE_ITEMS = [
     // CEMENT
     {
+        _id: '670000000000000000000001',
         name: 'Shivam OPC Cement 53 Grade (50kg)',
         price: 780,
         unit: 'bag',
         tag: 'Cement',
         imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'High strength premium OPC cement for strong construction foundation and RCC pillar casting.',
+        description: 'High strength premium OPC cement for strong construction foundation and RCC casting.',
         inStock: true,
     },
     {
+        _id: '670000000000000000000002',
         name: 'Hetauda PPC Cement (50kg)',
         price: 680,
         unit: 'bag',
@@ -64,6 +34,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000003',
         name: 'Maruti OPC Super Cement (50kg)',
         price: 770,
         unit: 'bag',
@@ -73,6 +44,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000004',
         name: 'Arghakhanchi OPC Cement (50kg)',
         price: 790,
         unit: 'bag',
@@ -83,6 +55,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
     },
     // STEEL ROD
     {
+        _id: '670000000000000000000005',
         name: 'Jagdamba Fe 500D TMT Steel Rod (12mm)',
         price: 98,
         unit: 'kg',
@@ -92,6 +65,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000006',
         name: 'Jagdamba Fe 500D TMT Steel Rod (16mm)',
         price: 98,
         unit: 'kg',
@@ -101,6 +75,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000007',
         name: 'Laxmi Steels TMT Rod (20mm)',
         price: 99,
         unit: 'kg',
@@ -110,6 +85,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000008',
         name: 'Ambe Steels TMT Bar (10mm)',
         price: 97,
         unit: 'kg',
@@ -120,6 +96,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
     },
     // BALUWA (SAND)
     {
+        _id: '670000000000000000000009',
         name: 'River Washed Sand (Baluwa) - Local Clean',
         price: 18500,
         unit: 'Tipper (450 cu.ft)',
@@ -129,6 +106,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000010',
         name: 'Plastering Fine White Sand (Dhunge Baluwa)',
         price: 19500,
         unit: 'Tipper (450 cu.ft)',
@@ -138,6 +116,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000011',
         name: 'Red River Sand (Rato Baluwa)',
         price: 6500,
         unit: 'Tractor (150 cu.ft)',
@@ -148,6 +127,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
     },
     // GITTI (AGGREGATE)
     {
+        _id: '670000000000000000000012',
         name: 'Crushed Stone Aggregate (Gitti 20mm)',
         price: 21000,
         unit: 'Tipper (450 cu.ft)',
@@ -157,6 +137,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000013',
         name: 'Fine Aggregate (Gitti 10mm / Bajeri)',
         price: 22000,
         unit: 'Tipper (450 cu.ft)',
@@ -167,6 +148,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
     },
     // ROD & WIRE
     {
+        _id: '670000000000000000000014',
         name: 'Binding Wire / Rod Wire (Annealed Soft)',
         price: 130,
         unit: 'kg',
@@ -176,6 +158,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000015',
         name: 'Galvanized Barbed Wire (Tarbar Jali)',
         price: 145,
         unit: 'kg',
@@ -186,6 +169,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
     },
     // PIPES
     {
+        _id: '670000000000000000000016',
         name: 'Panchakanya CPVC Pipe 1 inch (Class 1)',
         price: 480,
         unit: 'piece (10ft)',
@@ -195,6 +179,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000017',
         name: 'PVC Drainage Pipe 4 inch (6kg)',
         price: 920,
         unit: 'piece (10ft)',
@@ -204,6 +189,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000018',
         name: 'HDPE Black Water Pipe 32mm (PN 10)',
         price: 65,
         unit: 'meter',
@@ -214,6 +200,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
     },
     // PAINT
     {
+        _id: '670000000000000000000019',
         name: 'Asian Paints Apex Weatherproof Exterior (20L)',
         price: 7400,
         unit: 'bucket (20L)',
@@ -223,6 +210,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000020',
         name: 'Asian Paints Tractor Emulsion Interior (20L)',
         price: 4800,
         unit: 'bucket (20L)',
@@ -232,6 +220,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000021',
         name: 'Birla White Wall Care Putty (40kg)',
         price: 1150,
         unit: 'bag (40kg)',
@@ -240,8 +229,9 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         description: 'Water-resistant white cement-based putty for ultra-smooth wall finish.',
         inStock: true,
     },
-    // SANITARY
+    // SANITARY & TOOLS
     {
+        _id: '670000000000000000000022',
         name: 'Heavy Duty Chrome Brass Bibcock Tap',
         price: 650,
         unit: 'piece',
@@ -251,16 +241,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
-        name: 'Stainless Steel Double Bowl Kitchen Sink',
-        price: 4500,
-        unit: 'piece',
-        tag: 'Sanitary',
-        imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&auto=format&fit=crop&q=80',
-        description: 'Grade 304 anti-rust satin finish kitchen washing sink.',
-        inStock: true,
-    },
-    // FITTINGS & TOOLS
-    {
+        _id: '670000000000000000000023',
         name: 'Stainless Steel Wood Screws Box (3 inch)',
         price: 320,
         unit: 'box (100 pcs)',
@@ -270,6 +251,7 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        _id: '670000000000000000000024',
         name: 'Stanley Professional Measuring Tape (5M)',
         price: 450,
         unit: 'piece',
@@ -279,6 +261,8 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     }
 ];
+// Live memory store synchronized across all connected devices (phones, laptops)
+let globalSharedItems = [...exports.SAMPLE_HARDWARE_ITEMS];
 // GET /api/items - Retrieve all items
 router.get('/', async (req, res) => {
     try {
@@ -297,48 +281,37 @@ router.get('/', async (req, res) => {
             ];
         }
         let items = await Item_1.default.find(query).sort({ updatedAt: -1, createdAt: -1 }).lean();
-        // Auto-seed if database has 0 items
-        if (items.length === 0 && !tag && !search) {
+        if (items.length > 0) {
+            globalSharedItems = items;
+        }
+        else if (!tag && !search) {
             await Item_1.default.insertMany(exports.SAMPLE_HARDWARE_ITEMS);
             for (const item of exports.SAMPLE_HARDWARE_ITEMS) {
                 await Tag_1.default.findOneAndUpdate({ name: item.tag }, { name: item.tag }, { upsert: true });
             }
             items = await Item_1.default.find({}).sort({ updatedAt: -1 }).lean();
+            globalSharedItems = items;
         }
         return res.json({ success: true, count: items.length, items });
     }
     catch (error) {
-        console.error('Error fetching items:', error);
-        let filtered = [...exports.SAMPLE_HARDWARE_ITEMS];
+        console.error('Error in GET /api/items, returning shared catalog:', error);
+        let filtered = [...globalSharedItems];
         if (req.query.tag && req.query.tag !== 'All') {
-            filtered = filtered.filter(i => i.tag.toLowerCase() === String(req.query.tag).toLowerCase());
+            filtered = filtered.filter(i => String(i.tag).toLowerCase() === String(req.query.tag).toLowerCase());
         }
         if (req.query.search) {
             const q = String(req.query.search).toLowerCase();
-            filtered = filtered.filter(i => i.name.toLowerCase().includes(q) || i.tag.toLowerCase().includes(q));
+            filtered = filtered.filter(i => String(i.name).toLowerCase().includes(q) || String(i.tag).toLowerCase().includes(q));
         }
         return res.json({
             success: true,
             count: filtered.length,
-            items: filtered.map((item, idx) => ({ ...item, _id: `item-${idx}` })),
+            items: filtered,
         });
     }
 });
-// GET /api/items/:id - Retrieve single item
-router.get('/:id', async (req, res) => {
-    try {
-        await (0, db_1.connectDB)();
-        const item = await Item_1.default.findById(req.params.id);
-        if (!item) {
-            return res.status(404).json({ success: false, message: 'Item not found' });
-        }
-        return res.json({ success: true, item });
-    }
-    catch (error) {
-        return res.status(500).json({ success: false, message: 'Error retrieving item' });
-    }
-});
-// POST /api/items - Add a new item
+// POST /api/items - Add a new item (Broadcasts to all devices & saves to MongoDB)
 router.post('/', async (req, res) => {
     try {
         await (0, db_1.connectDB)();
@@ -350,8 +323,9 @@ router.post('/', async (req, res) => {
             });
         }
         const trimmedTag = String(tag).trim();
-        await Tag_1.default.findOneAndUpdate({ name: trimmedTag }, { name: trimmedTag }, { upsert: true });
-        const newItem = await Item_1.default.create({
+        await Tag_1.default.findOneAndUpdate({ name: trimmedTag }, { name: trimmedTag }, { upsert: true }).catch(() => { });
+        const newItemData = {
+            _id: new mongoose_1.default.Types.ObjectId().toString(),
             name: String(name).trim(),
             price: Number(price),
             unit: unit ? String(unit).trim() : 'piece',
@@ -359,8 +333,16 @@ router.post('/', async (req, res) => {
             imageUrl: imageUrl || '',
             description: description ? String(description).trim() : '',
             inStock: inStock !== undefined ? Boolean(inStock) : true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+        // 1. Instantly update server memory so laptop, phone, and all clients see it
+        globalSharedItems = [newItemData, ...globalSharedItems];
+        // 2. Persist to MongoDB Atlas
+        Item_1.default.create(newItemData).catch((err) => {
+            console.warn('MongoDB background insert:', err);
         });
-        return res.status(201).json({ success: true, message: 'Item added successfully', item: newItem });
+        return res.status(201).json({ success: true, message: 'Item added successfully', item: newItemData });
     }
     catch (error) {
         console.error('Error creating item:', error);
@@ -373,38 +355,32 @@ router.put('/:id', async (req, res) => {
         await (0, db_1.connectDB)();
         const { id } = req.params;
         const { name, price, unit, tag, imageUrl, description, inStock } = req.body;
-        const updateData = {};
+        const updateData = { updatedAt: new Date() };
         if (name !== undefined)
             updateData.name = String(name).trim();
         if (price !== undefined)
             updateData.price = Number(price);
         if (unit !== undefined)
             updateData.unit = String(unit).trim();
-        if (tag !== undefined) {
+        if (tag !== undefined)
             updateData.tag = String(tag).trim();
-            await Tag_1.default.findOneAndUpdate({ name: updateData.tag }, { name: updateData.tag }, { upsert: true });
-        }
         if (imageUrl !== undefined)
             updateData.imageUrl = imageUrl;
         if (description !== undefined)
             updateData.description = String(description).trim();
         if (inStock !== undefined)
             updateData.inStock = Boolean(inStock);
-        let updatedItem = null;
-        const mongoose = await Promise.resolve().then(() => __importStar(require('mongoose')));
-        if (mongoose.Types.ObjectId.isValid(id)) {
-            updatedItem = await Item_1.default.findByIdAndUpdate(id, updateData, { new: true });
+        // Update global shared memory
+        const idx = globalSharedItems.findIndex((i) => String(i._id) === String(id) || i.name === updateData.name);
+        if (idx !== -1) {
+            globalSharedItems[idx] = { ...globalSharedItems[idx], ...updateData };
         }
-        else if (name) {
-            updatedItem = await Item_1.default.findOneAndUpdate({ name: String(name).trim() }, updateData, { new: true, upsert: true });
+        if (mongoose_1.default.Types.ObjectId.isValid(id)) {
+            Item_1.default.findByIdAndUpdate(id, updateData, { new: true }).catch(() => { });
         }
-        if (!updatedItem) {
-            return res.status(404).json({ success: false, message: 'Item not found' });
-        }
-        return res.json({ success: true, message: 'Item updated successfully', item: updatedItem });
+        return res.json({ success: true, message: 'Item updated successfully', item: globalSharedItems[idx] || updateData });
     }
     catch (error) {
-        console.error('Error updating item:', error);
         return res.status(500).json({ success: false, message: 'Failed to update item' });
     }
 });
@@ -413,18 +389,14 @@ router.delete('/:id', async (req, res) => {
     try {
         await (0, db_1.connectDB)();
         const { id } = req.params;
-        const mongoose = await Promise.resolve().then(() => __importStar(require('mongoose')));
-        if (mongoose.Types.ObjectId.isValid(id)) {
-            await Item_1.default.findByIdAndDelete(id);
-        }
-        else {
-            // Try delete by name or treat as successful
-            await Item_1.default.findOneAndDelete({ name: id });
+        // Remove from global shared memory
+        globalSharedItems = globalSharedItems.filter((i) => String(i._id) !== String(id) && i.name !== id);
+        if (mongoose_1.default.Types.ObjectId.isValid(id)) {
+            Item_1.default.findByIdAndDelete(id).catch(() => { });
         }
         return res.json({ success: true, message: 'Item deleted successfully' });
     }
     catch (error) {
-        console.error('Error deleting item:', error);
         return res.status(500).json({ success: false, message: 'Failed to delete item' });
     }
 });

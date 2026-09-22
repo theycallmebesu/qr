@@ -1,14 +1,6 @@
-import { Router, Request, Response } from 'express';
-import mongoose from 'mongoose';
-import Item from '../models/Item';
-import Tag from '../models/Tag';
-import { connectDB } from '../config/db';
+import { HardwareItem } from '../types';
 
-const router = Router();
-
-// Full hardware product catalog for Shree Pashupatinath Hardware
-export const SAMPLE_HARDWARE_ITEMS = [
-  // CEMENT
+export const SAMPLE_HARDWARE_ITEMS: HardwareItem[] = [
   {
     _id: '670000000000000000000001',
     name: 'Shivam OPC Cement 53 Grade (50kg)',
@@ -49,8 +41,6 @@ export const SAMPLE_HARDWARE_ITEMS = [
     description: 'Top-tier clinker OPC cement with high weather resistance.',
     inStock: true,
   },
-
-  // STEEL ROD
   {
     _id: '670000000000000000000005',
     name: 'Jagdamba Fe 500D TMT Steel Rod (12mm)',
@@ -91,8 +81,6 @@ export const SAMPLE_HARDWARE_ITEMS = [
     description: 'Ideal for slab mesh wiring and lintel reinforcement.',
     inStock: true,
   },
-
-  // BALUWA (SAND)
   {
     _id: '670000000000000000000009',
     name: 'River Washed Sand (Baluwa) - Local Clean',
@@ -123,8 +111,6 @@ export const SAMPLE_HARDWARE_ITEMS = [
     description: 'General construction fill and brick laying sand.',
     inStock: true,
   },
-
-  // GITTI (AGGREGATE)
   {
     _id: '670000000000000000000012',
     name: 'Crushed Stone Aggregate (Gitti 20mm)',
@@ -145,8 +131,6 @@ export const SAMPLE_HARDWARE_ITEMS = [
     description: 'Compact gravel for floor leveling and precast concrete molds.',
     inStock: true,
   },
-
-  // ROD & WIRE
   {
     _id: '670000000000000000000014',
     name: 'Binding Wire / Rod Wire (Annealed Soft)',
@@ -167,8 +151,6 @@ export const SAMPLE_HARDWARE_ITEMS = [
     description: 'Rustproof high-tensile boundary fencing wire.',
     inStock: true,
   },
-
-  // PIPES
   {
     _id: '670000000000000000000016',
     name: 'Panchakanya CPVC Pipe 1 inch (Class 1)',
@@ -199,8 +181,6 @@ export const SAMPLE_HARDWARE_ITEMS = [
     description: 'Flexible rollable underground main drinking water supply pipe.',
     inStock: true,
   },
-
-  // PAINT
   {
     _id: '670000000000000000000019',
     name: 'Asian Paints Apex Weatherproof Exterior (20L)',
@@ -231,8 +211,6 @@ export const SAMPLE_HARDWARE_ITEMS = [
     description: 'Water-resistant white cement-based putty for ultra-smooth wall finish.',
     inStock: true,
   },
-
-  // SANITARY & TOOLS
   {
     _id: '670000000000000000000022',
     name: 'Heavy Duty Chrome Brass Bibcock Tap',
@@ -264,158 +242,3 @@ export const SAMPLE_HARDWARE_ITEMS = [
     inStock: true,
   }
 ];
-
-// Live memory store synchronized across all connected devices (phones, laptops)
-let globalSharedItems: any[] = [...SAMPLE_HARDWARE_ITEMS];
-
-// GET /api/items - Retrieve all items
-router.get('/', async (req: Request, res: Response) => {
-  try {
-    await connectDB();
-    const { tag, search } = req.query;
-
-    const query: Record<string, any> = {};
-    if (tag && tag !== 'All') {
-      query.tag = { $regex: new RegExp(`^${String(tag).trim()}$`, 'i') };
-    }
-    if (search && String(search).trim()) {
-      const searchRegex = new RegExp(String(search).trim(), 'i');
-      query.$or = [
-        { name: { $regex: searchRegex } },
-        { tag: { $regex: searchRegex } },
-        { description: { $regex: searchRegex } }
-      ];
-    }
-
-    let items = await Item.find(query).sort({ updatedAt: -1, createdAt: -1 }).lean();
-
-    if (items.length > 0) {
-      globalSharedItems = items;
-    } else if (!tag && !search) {
-      await Item.insertMany(SAMPLE_HARDWARE_ITEMS);
-      for (const item of SAMPLE_HARDWARE_ITEMS) {
-        await Tag.findOneAndUpdate({ name: item.tag }, { name: item.tag }, { upsert: true });
-      }
-      items = await Item.find({}).sort({ updatedAt: -1 }).lean();
-      globalSharedItems = items;
-    }
-
-    return res.json({ success: true, count: items.length, items });
-  } catch (error) {
-    console.error('Error in GET /api/items, returning shared catalog:', error);
-    let filtered = [...globalSharedItems];
-    if (req.query.tag && req.query.tag !== 'All') {
-      filtered = filtered.filter(i => String(i.tag).toLowerCase() === String(req.query.tag).toLowerCase());
-    }
-    if (req.query.search) {
-      const q = String(req.query.search).toLowerCase();
-      filtered = filtered.filter(i => String(i.name).toLowerCase().includes(q) || String(i.tag).toLowerCase().includes(q));
-    }
-    return res.json({
-      success: true,
-      count: filtered.length,
-      items: filtered,
-    });
-  }
-});
-
-// POST /api/items - Add a new item (Broadcasts to all devices & saves to MongoDB)
-router.post('/', async (req: Request, res: Response) => {
-  try {
-    await connectDB();
-    const { name, price, unit, tag, imageUrl, description, inStock } = req.body;
-
-    if (!name || price === undefined || !tag) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name, price, and tag are required fields',
-      });
-    }
-
-    const trimmedTag = String(tag).trim();
-    await Tag.findOneAndUpdate(
-      { name: trimmedTag },
-      { name: trimmedTag },
-      { upsert: true }
-    ).catch(() => {});
-
-    const newItemData = {
-      _id: new mongoose.Types.ObjectId().toString(),
-      name: String(name).trim(),
-      price: Number(price),
-      unit: unit ? String(unit).trim() : 'piece',
-      tag: trimmedTag,
-      imageUrl: imageUrl || '',
-      description: description ? String(description).trim() : '',
-      inStock: inStock !== undefined ? Boolean(inStock) : true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    // 1. Instantly update server memory so laptop, phone, and all clients see it
-    globalSharedItems = [newItemData, ...globalSharedItems];
-
-    // 2. Persist to MongoDB Atlas
-    Item.create(newItemData).catch((err) => {
-      console.warn('MongoDB background insert:', err);
-    });
-
-    return res.status(201).json({ success: true, message: 'Item added successfully', item: newItemData });
-  } catch (error) {
-    console.error('Error creating item:', error);
-    return res.status(500).json({ success: false, message: 'Failed to create item' });
-  }
-});
-
-// PUT /api/items/:id - Update item
-router.put('/:id', async (req: Request, res: Response) => {
-  try {
-    await connectDB();
-    const { id } = req.params;
-    const { name, price, unit, tag, imageUrl, description, inStock } = req.body;
-
-    const updateData: Record<string, any> = { updatedAt: new Date() };
-    if (name !== undefined) updateData.name = String(name).trim();
-    if (price !== undefined) updateData.price = Number(price);
-    if (unit !== undefined) updateData.unit = String(unit).trim();
-    if (tag !== undefined) updateData.tag = String(tag).trim();
-    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
-    if (description !== undefined) updateData.description = String(description).trim();
-    if (inStock !== undefined) updateData.inStock = Boolean(inStock);
-
-    // Update global shared memory
-    const idx = globalSharedItems.findIndex((i) => String(i._id) === String(id) || i.name === updateData.name);
-    if (idx !== -1) {
-      globalSharedItems[idx] = { ...globalSharedItems[idx], ...updateData };
-    }
-
-    if (mongoose.Types.ObjectId.isValid(id)) {
-      Item.findByIdAndUpdate(id, updateData, { new: true }).catch(() => {});
-    }
-
-    return res.json({ success: true, message: 'Item updated successfully', item: globalSharedItems[idx] || updateData });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: 'Failed to update item' });
-  }
-});
-
-// DELETE /api/items/:id - Delete item
-router.delete('/:id', async (req: Request, res: Response) => {
-  try {
-    await connectDB();
-    const { id } = req.params;
-
-    // Remove from global shared memory
-    globalSharedItems = globalSharedItems.filter((i) => String(i._id) !== String(id) && i.name !== id);
-
-    if (mongoose.Types.ObjectId.isValid(id)) {
-      Item.findByIdAndDelete(id).catch(() => {});
-    }
-
-    return res.json({ success: true, message: 'Item deleted successfully' });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: 'Failed to delete item' });
-  }
-});
-
-export default router;
