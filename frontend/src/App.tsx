@@ -7,7 +7,8 @@ import { ItemCard } from './components/ItemCard';
 import { AdminLoginModal } from './components/AdminLoginModal';
 import { AdminItemModal } from './components/AdminItemModal';
 import { TagManagerModal } from './components/TagManagerModal';
-import { api } from './services/api';
+import { ServerSettingsModal } from './components/ServerSettingsModal';
+import { api, clearLocalCache } from './services/api';
 import { HardwareItem, Tag } from './types';
 import { PackageOpen, Plus, Loader2 } from 'lucide-react';
 
@@ -18,16 +19,19 @@ export function App() {
   const [selectedTag, setSelectedTag] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [backendConnected, setBackendConnected] = useState(false);
 
   // Admin States
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
+  const [isServerSettingsOpen, setIsServerSettingsOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<HardwareItem | null>(null);
 
   // Initial Data Load & Auth Check
   useEffect(() => {
+    clearLocalCache(); // Clear old offline dummy data to force live MongoDB sync
     checkSavedAuth();
     loadData();
   }, []);
@@ -48,6 +52,10 @@ export function App() {
   const loadData = async () => {
     setIsLoading(true);
     try {
+      // Check live backend & MongoDB connection
+      const health = await api.checkHealth().catch(() => ({ connected: false }));
+      setBackendConnected(Boolean(health.connected));
+
       const [itemsRes, tagsRes] = await Promise.all([
         api.getItems(),
         api.getTags().catch(() => ({ tags: [], success: false })),
@@ -60,15 +68,14 @@ export function App() {
       if (tagsRes.tags && tagsRes.tags.length > 0) {
         setTags(tagsRes.tags);
       } else {
-        // Derive tags from items if tags API returned empty
-        const uniqueTags = Array.from(new Set(itemsRes.items.map((i) => i.tag))).map((t, idx) => ({
+        const uniqueTags = Array.from(new Set((itemsRes.items || []).map((i) => i.tag))).map((t, idx) => ({
           _id: `tag-${idx}`,
           name: t,
         }));
         setTags(uniqueTags);
       }
     } catch (err) {
-      console.error('Failed to load catalog data:', err);
+      console.error('Failed to load live MongoDB data:', err);
     } finally {
       setIsLoading(false);
     }
@@ -193,8 +200,10 @@ export function App() {
           setIsAddItemOpen(true);
         }}
         onOpenTagManager={() => setIsTagManagerOpen(true)}
+        onOpenServerSettings={() => setIsServerSettingsOpen(true)}
         onRefresh={loadData}
         isLoading={isLoading}
+        backendConnected={backendConnected}
       />
 
       {/* 2. Shop Banner & Notice */}
@@ -372,6 +381,13 @@ export function App() {
         onAddTag={handleAddTag}
         onDeleteTag={handleDeleteTag}
         tagCounts={tagCounts}
+      />
+
+      {/* MongoDB Server Connection Settings Modal */}
+      <ServerSettingsModal
+        isOpen={isServerSettingsOpen}
+        onClose={() => setIsServerSettingsOpen(false)}
+        onRefreshData={loadData}
       />
 
     </div>

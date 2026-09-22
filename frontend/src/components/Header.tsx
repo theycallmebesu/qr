@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, ShieldCheck, LogOut, Plus, Tags, RefreshCw } from 'lucide-react';
+import { Shield, ShieldCheck, LogOut, Plus, Tags, RefreshCw, Database } from 'lucide-react';
 
 interface HeaderProps {
   isAdmin: boolean;
@@ -7,8 +7,10 @@ interface HeaderProps {
   onLogout: () => void;
   onOpenAddItem: () => void;
   onOpenTagManager: () => void;
+  onOpenServerSettings: () => void;
   onRefresh: () => void;
   isLoading: boolean;
+  backendConnected: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -42,10 +44,19 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right Action Controls */}
           <div className="flex items-center gap-1.5">
+            {/* MongoDB / Server Settings Button */}
+            <button
+              onClick={onOpenServerSettings}
+              title={backendConnected ? "MongoDB Atlas Connected" : "Configure MongoDB Backend URL"}
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition flex items-center gap-1"
+            >
+              <Database className="w-4 h-4 text-emerald-300" />
+            </button>
+
             {/* Refresh Button */}
             <button
               onClick={onRefresh}
-              title="Refresh price list"
+              title="Refresh price list from MongoDB"
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-white transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
