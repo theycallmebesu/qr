@@ -19,8 +19,10 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onOpenAddItem,
   onOpenTagManager,
+  onOpenServerSettings,
   onRefresh,
   isLoading,
+  backendConnected,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-gradient-to-r from-red-600 via-red-600 to-red-700 text-white shadow-lg border-b-2 border-red-800">
