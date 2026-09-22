@@ -8,21 +8,20 @@ try {
   // Ignore if not permitted
 }
 
+const DEFAULT_MONGODB_URI = 'mongodb+srv://bishu1maharjan_db_user:EuCEAgf9I39StGlu@cluster0.gkmyrme.mongodb.net/bankqr?retryWrites=true&w=majority&appName=Cluster0';
+
 export async function connectDB(): Promise<void> {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    console.error('❌ MONGODB_URI is not defined in environment variables.');
-    return;
-  }
+  const uri = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
 
   try {
     if (mongoose.connection.readyState >= 1) {
       return;
     }
+    console.log('🔄 Connecting to MongoDB Atlas...');
     await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 8000,
     });
-    console.log('✅ Connected to MongoDB Atlas (hardwareshop_db)');
+    console.log('✅ Connected to MongoDB Atlas database (bankqr)');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
   }
