@@ -1,18 +1,4 @@
 import { HardwareItem, Tag } from '../types';
-import { SAMPLE_HARDWARE_ITEMS } from './starterItems';
-
-export const DEFAULT_STARTER_TAGS: Tag[] = [
-  { _id: 't-1', name: 'Pipes' },
-  { _id: 't-2', name: 'Cement' },
-  { _id: 't-3', name: 'Steel Rod' },
-  { _id: 't-4', name: 'Baluwa' },
-  { _id: 't-5', name: 'Gitti' },
-  { _id: 't-6', name: 'Rod' },
-  { _id: 't-7', name: 'Paint' },
-  { _id: 't-8', name: 'Sanitary' },
-  { _id: 't-9', name: 'Electrical' },
-  { _id: 't-10', name: 'Fittings & Tools' },
-];
 
 export function getApiBaseUrl(): string {
   const customUrl = localStorage.getItem('shree_backend_url');
@@ -62,48 +48,31 @@ export const api = {
     }
   },
 
-  // 1. Fetch live items from Render backend & MongoDB (Cross-device synced)
+  // 1. Fetch live items directly from MongoDB Atlas
   async getItems(tag?: string, search?: string): Promise<{ items: HardwareItem[]; count: number; success: boolean }> {
     const baseUrl = getApiBaseUrl();
-    try {
-      const params = new URLSearchParams();
-      if (tag && tag !== 'All') params.append('tag', tag);
-      if (search && search.trim()) params.append('search', search.trim());
+    const params = new URLSearchParams();
+    if (tag && tag !== 'All') params.append('tag', tag);
+    if (search && search.trim()) params.append('search', search.trim());
 
-      const res = await fetch(`${baseUrl}/api/items${params.toString() ? `?${params.toString()}` : ''}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const res = await fetch(`${baseUrl}/api/items${params.toString() ? `?${params.toString()}` : ''}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.items && Array.isArray(data.items)) {
-          return {
-            items: data.items,
-            count: data.items.length,
-            success: true,
-          };
-        }
-      }
-    } catch (e) {
-      console.warn('Live API fetch error, using fallback:', e);
+    if (!res.ok) {
+      throw new Error(`Server returned status ${res.status}`);
     }
 
-    // Fallback if backend is asleep
-    let fallback = [...SAMPLE_HARDWARE_ITEMS];
-    if (tag && tag !== 'All') {
-      fallback = fallback.filter((i) => i.tag.toLowerCase() === tag.toLowerCase());
-    }
-    if (search && search.trim()) {
-      const q = search.toLowerCase().trim();
-      fallback = fallback.filter(
-        (i) => i.name.toLowerCase().includes(q) || i.tag.toLowerCase().includes(q)
-      );
-    }
-    return { items: fallback, count: fallback.length, success: true };
+    const data = await res.json();
+    return {
+      items: data.items || [],
+      count: data.count || (data.items ? data.items.length : 0),
+      success: true,
+    };
   },
 
-  // 2. Create item (Sends to Render backend which saves in MongoDB & broadcasts to phone)
+  // 2. Create item directly in MongoDB Atlas
   async createItem(item: Omit<HardwareItem, '_id'>): Promise<{ success: boolean; item: HardwareItem; message?: string }> {
     const baseUrl = getApiBaseUrl();
     const res = await fetch(`${baseUrl}/api/items`, {
@@ -112,21 +81,16 @@ export const api = {
       body: JSON.stringify(item),
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      return { success: true, item: data.item, message: 'Item saved successfully' };
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Failed to create item in database (${res.status})`);
     }
 
-    // Fallback response if offline
-    const fallbackItem: HardwareItem = {
-      ...item,
-      _id: `item-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    return { success: true, item: fallbackItem, message: 'Item saved' };
+    const data = await res.json();
+    return data;
   },
 
-  // 3. Update item
+  // 3. Update item directly in MongoDB Atlas
   async updateItem(id: string, itemData: Partial<HardwareItem>): Promise<{ success: boolean; item: HardwareItem; message?: string }> {
     const baseUrl = getApiBaseUrl();
     const res = await fetch(`${baseUrl}/api/items/${encodeURIComponent(id)}`, {
@@ -135,35 +99,39 @@ export const api = {
       body: JSON.stringify(itemData),
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      return { success: true, item: data.item, message: 'Item updated' };
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Failed to update item in database (${res.status})`);
     }
 
-    return { success: true, item: { ...(itemData as HardwareItem), _id: id } };
+    const data = await res.json();
+    return data;
   },
 
-  // 4. Delete item
+  // 4. Delete item directly from MongoDB Atlas
   async deleteItem(id: string): Promise<{ success: boolean; message?: string }> {
     const baseUrl = getApiBaseUrl();
-    await fetch(`${baseUrl}/api/items/${encodeURIComponent(id)}`, {
+    const res = await fetch(`${baseUrl}/api/items/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    return { success: true, message: 'Item deleted' };
+
+    if (!res.ok) {
+      throw new Error(`Failed to delete item (${res.status})`);
+    }
+
+    return { success: true, message: 'Item deleted successfully' };
   },
 
   // 5. Tags
   async getTags(): Promise<{ tags: Tag[]; success: boolean }> {
     const baseUrl = getApiBaseUrl();
-    try {
-      const res = await fetch(`${baseUrl}/api/tags`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.tags && data.tags.length > 0) return data;
-      }
-    } catch {}
-    return { success: true, tags: DEFAULT_STARTER_TAGS };
+    const res = await fetch(`${baseUrl}/api/tags`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.tags) return data;
+    }
+    return { success: true, tags: [] };
   },
 
   async createTag(name: string): Promise<{ tag: Tag; success: boolean; message?: string }> {
@@ -173,19 +141,22 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ name }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      return { success: true, tag: data.tag };
+    if (!res.ok) {
+      throw new Error('Failed to create tag');
     }
-    return { success: true, tag: { _id: `tag-${Date.now()}`, name: name.trim() } };
+    const data = await res.json();
+    return data;
   },
 
   async deleteTag(idOrName: string): Promise<{ success: boolean; message?: string }> {
     const baseUrl = getApiBaseUrl();
-    await fetch(`${baseUrl}/api/tags/${encodeURIComponent(idOrName)}`, {
+    const res = await fetch(`${baseUrl}/api/tags/${encodeURIComponent(idOrName)}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
+    if (!res.ok) {
+      throw new Error('Failed to delete tag');
+    }
     return { success: true, message: 'Tag deleted' };
   },
 

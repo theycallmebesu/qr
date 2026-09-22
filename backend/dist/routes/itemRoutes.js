@@ -3,267 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SAMPLE_HARDWARE_ITEMS = void 0;
 const express_1 = require("express");
 const mongoose_1 = __importDefault(require("mongoose"));
 const Item_1 = __importDefault(require("../models/Item"));
 const Tag_1 = __importDefault(require("../models/Tag"));
 const db_1 = require("../config/db");
 const router = (0, express_1.Router)();
-// Full hardware product catalog for Shree Pashupatinath Hardware
-exports.SAMPLE_HARDWARE_ITEMS = [
-    // CEMENT
-    {
-        _id: '670000000000000000000001',
-        name: 'Shivam OPC Cement 53 Grade (50kg)',
-        price: 780,
-        unit: 'bag',
-        tag: 'Cement',
-        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'High strength premium OPC cement for strong construction foundation and RCC casting.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000002',
-        name: 'Hetauda PPC Cement (50kg)',
-        price: 680,
-        unit: 'bag',
-        tag: 'Cement',
-        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'General purpose Portland Pozzolana Cement for masonry, plastering, and flooring.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000003',
-        name: 'Maruti OPC Super Cement (50kg)',
-        price: 770,
-        unit: 'bag',
-        tag: 'Cement',
-        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'Fast curing high-strength cement for commercial RCC slabs.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000004',
-        name: 'Arghakhanchi OPC Cement (50kg)',
-        price: 790,
-        unit: 'bag',
-        tag: 'Cement',
-        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'Top-tier clinker OPC cement with high weather resistance.',
-        inStock: true,
-    },
-    // STEEL ROD
-    {
-        _id: '670000000000000000000005',
-        name: 'Jagdamba Fe 500D TMT Steel Rod (12mm)',
-        price: 98,
-        unit: 'kg',
-        tag: 'Steel Rod',
-        imageUrl: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80',
-        description: 'Ductile high-yield TMT rebar for earthquake-resistant pillars and beams.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000006',
-        name: 'Jagdamba Fe 500D TMT Steel Rod (16mm)',
-        price: 98,
-        unit: 'kg',
-        tag: 'Steel Rod',
-        imageUrl: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80',
-        description: 'Heavy structural reinforcement steel rod for column footing.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000007',
-        name: 'Laxmi Steels TMT Rod (20mm)',
-        price: 99,
-        unit: 'kg',
-        tag: 'Steel Rod',
-        imageUrl: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80',
-        description: 'Extra high tensile strength commercial construction rebar.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000008',
-        name: 'Ambe Steels TMT Bar (10mm)',
-        price: 97,
-        unit: 'kg',
-        tag: 'Steel Rod',
-        imageUrl: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80',
-        description: 'Ideal for slab mesh wiring and lintel reinforcement.',
-        inStock: true,
-    },
-    // BALUWA (SAND)
-    {
-        _id: '670000000000000000000009',
-        name: 'River Washed Sand (Baluwa) - Local Clean',
-        price: 18500,
-        unit: 'Tipper (450 cu.ft)',
-        tag: 'Baluwa',
-        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        description: 'Fine river-washed silica sand for plastering, slab casting, and brickwork.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000010',
-        name: 'Plastering Fine White Sand (Dhunge Baluwa)',
-        price: 19500,
-        unit: 'Tipper (450 cu.ft)',
-        tag: 'Baluwa',
-        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        description: 'Screened super-fine sand for wall putty and smooth internal plastering.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000011',
-        name: 'Red River Sand (Rato Baluwa)',
-        price: 6500,
-        unit: 'Tractor (150 cu.ft)',
-        tag: 'Baluwa',
-        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        description: 'General construction fill and brick laying sand.',
-        inStock: true,
-    },
-    // GITTI (AGGREGATE)
-    {
-        _id: '670000000000000000000012',
-        name: 'Crushed Stone Aggregate (Gitti 20mm)',
-        price: 21000,
-        unit: 'Tipper (450 cu.ft)',
-        tag: 'Gitti',
-        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        description: 'High grade machine-crushed blue metal aggregate for pillar & RCC concrete.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000013',
-        name: 'Fine Aggregate (Gitti 10mm / Bajeri)',
-        price: 22000,
-        unit: 'Tipper (450 cu.ft)',
-        tag: 'Gitti',
-        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        description: 'Compact gravel for floor leveling and precast concrete molds.',
-        inStock: true,
-    },
-    // ROD & WIRE
-    {
-        _id: '670000000000000000000014',
-        name: 'Binding Wire / Rod Wire (Annealed Soft)',
-        price: 130,
-        unit: 'kg',
-        tag: 'Rod',
-        imageUrl: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=600&auto=format&fit=crop&q=80',
-        description: 'Soft annealed iron wire for binding reinforcement rebar nets and ring ties.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000015',
-        name: 'Galvanized Barbed Wire (Tarbar Jali)',
-        price: 145,
-        unit: 'kg',
-        tag: 'Rod',
-        imageUrl: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=600&auto=format&fit=crop&q=80',
-        description: 'Rustproof high-tensile boundary fencing wire.',
-        inStock: true,
-    },
-    // PIPES
-    {
-        _id: '670000000000000000000016',
-        name: 'Panchakanya CPVC Pipe 1 inch (Class 1)',
-        price: 480,
-        unit: 'piece (10ft)',
-        tag: 'Pipes',
-        imageUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&auto=format&fit=crop&q=80',
-        description: 'Hot & cold potable water supply CPVC pipe, UV-resistant and durable.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000017',
-        name: 'PVC Drainage Pipe 4 inch (6kg)',
-        price: 920,
-        unit: 'piece (10ft)',
-        tag: 'Pipes',
-        imageUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&auto=format&fit=crop&q=80',
-        description: 'Heavy duty underground soil and wastewater drainage pipe.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000018',
-        name: 'HDPE Black Water Pipe 32mm (PN 10)',
-        price: 65,
-        unit: 'meter',
-        tag: 'Pipes',
-        imageUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&auto=format&fit=crop&q=80',
-        description: 'Flexible rollable underground main drinking water supply pipe.',
-        inStock: true,
-    },
-    // PAINT
-    {
-        _id: '670000000000000000000019',
-        name: 'Asian Paints Apex Weatherproof Exterior (20L)',
-        price: 7400,
-        unit: 'bucket (20L)',
-        tag: 'Paint',
-        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'Exterior emulsion with silicone additives to prevent algae and moisture peeling.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000020',
-        name: 'Asian Paints Tractor Emulsion Interior (20L)',
-        price: 4800,
-        unit: 'bucket (20L)',
-        tag: 'Paint',
-        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'Smooth matte finish washable interior wall paint.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000021',
-        name: 'Birla White Wall Care Putty (40kg)',
-        price: 1150,
-        unit: 'bag (40kg)',
-        tag: 'Paint',
-        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'Water-resistant white cement-based putty for ultra-smooth wall finish.',
-        inStock: true,
-    },
-    // SANITARY & TOOLS
-    {
-        _id: '670000000000000000000022',
-        name: 'Heavy Duty Chrome Brass Bibcock Tap',
-        price: 650,
-        unit: 'piece',
-        tag: 'Sanitary',
-        imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&auto=format&fit=crop&q=80',
-        description: 'Solid brass quarter-turn water tap with mirror chrome finish.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000023',
-        name: 'Stainless Steel Wood Screws Box (3 inch)',
-        price: 320,
-        unit: 'box (100 pcs)',
-        tag: 'Fittings & Tools',
-        imageUrl: 'https://images.unsplash.com/photo-1586864387789-628af9feed72?w=600&auto=format&fit=crop&q=80',
-        description: 'Rustproof high-torque wood screws for roofing and carpentry framing.',
-        inStock: true,
-    },
-    {
-        _id: '670000000000000000000024',
-        name: 'Stanley Professional Measuring Tape (5M)',
-        price: 450,
-        unit: 'piece',
-        tag: 'Fittings & Tools',
-        imageUrl: 'https://images.unsplash.com/photo-1586864387789-628af9feed72?w=600&auto=format&fit=crop&q=80',
-        description: 'Shock-resistant rubber casing measuring tape with lock mechanism.',
-        inStock: true,
-    }
-];
-// Live memory store synchronized across all connected devices (phones, laptops)
-let globalSharedItems = [...exports.SAMPLE_HARDWARE_ITEMS];
-// GET /api/items - Retrieve all items
+// GET /api/items - Retrieve all live items directly from MongoDB Atlas
 router.get('/', async (req, res) => {
     try {
         await (0, db_1.connectDB)();
@@ -280,38 +26,29 @@ router.get('/', async (req, res) => {
                 { description: { $regex: searchRegex } }
             ];
         }
-        let items = await Item_1.default.find(query).sort({ updatedAt: -1, createdAt: -1 }).lean();
-        if (items.length > 0) {
-            globalSharedItems = items;
-        }
-        else if (!tag && !search) {
-            await Item_1.default.insertMany(exports.SAMPLE_HARDWARE_ITEMS);
-            for (const item of exports.SAMPLE_HARDWARE_ITEMS) {
-                await Tag_1.default.findOneAndUpdate({ name: item.tag }, { name: item.tag }, { upsert: true });
-            }
-            items = await Item_1.default.find({}).sort({ updatedAt: -1 }).lean();
-            globalSharedItems = items;
-        }
+        const items = await Item_1.default.find(query).sort({ updatedAt: -1, createdAt: -1 }).lean();
         return res.json({ success: true, count: items.length, items });
     }
     catch (error) {
-        console.error('Error in GET /api/items, returning shared catalog:', error);
-        let filtered = [...globalSharedItems];
-        if (req.query.tag && req.query.tag !== 'All') {
-            filtered = filtered.filter(i => String(i.tag).toLowerCase() === String(req.query.tag).toLowerCase());
-        }
-        if (req.query.search) {
-            const q = String(req.query.search).toLowerCase();
-            filtered = filtered.filter(i => String(i.name).toLowerCase().includes(q) || String(i.tag).toLowerCase().includes(q));
-        }
-        return res.json({
-            success: true,
-            count: filtered.length,
-            items: filtered,
-        });
+        console.error('Error in GET /api/items:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Database error', items: [] });
     }
 });
-// POST /api/items - Add a new item (Broadcasts to all devices & saves to MongoDB)
+// GET /api/items/:id - Retrieve single item
+router.get('/:id', async (req, res) => {
+    try {
+        await (0, db_1.connectDB)();
+        const item = await Item_1.default.findById(req.params.id);
+        if (!item) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+        return res.json({ success: true, item });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, message: 'Error retrieving item' });
+    }
+});
+// POST /api/items - Create item directly in MongoDB Atlas
 router.post('/', async (req, res) => {
     try {
         await (0, db_1.connectDB)();
@@ -324,8 +61,7 @@ router.post('/', async (req, res) => {
         }
         const trimmedTag = String(tag).trim();
         await Tag_1.default.findOneAndUpdate({ name: trimmedTag }, { name: trimmedTag }, { upsert: true }).catch(() => { });
-        const newItemData = {
-            _id: new mongoose_1.default.Types.ObjectId().toString(),
+        const newItem = await Item_1.default.create({
             name: String(name).trim(),
             price: Number(price),
             unit: unit ? String(unit).trim() : 'piece',
@@ -333,23 +69,16 @@ router.post('/', async (req, res) => {
             imageUrl: imageUrl || '',
             description: description ? String(description).trim() : '',
             inStock: inStock !== undefined ? Boolean(inStock) : true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        // 1. Instantly update server memory so laptop, phone, and all clients see it
-        globalSharedItems = [newItemData, ...globalSharedItems];
-        // 2. Persist to MongoDB Atlas
-        Item_1.default.create(newItemData).catch((err) => {
-            console.warn('MongoDB background insert:', err);
         });
-        return res.status(201).json({ success: true, message: 'Item added successfully', item: newItemData });
+        console.log('✅ Successfully created item in MongoDB Atlas:', newItem._id, newItem.name);
+        return res.status(201).json({ success: true, message: 'Item added successfully', item: newItem });
     }
     catch (error) {
-        console.error('Error creating item:', error);
-        return res.status(500).json({ success: false, message: 'Failed to create item' });
+        console.error('Error creating item in MongoDB:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Failed to create item in MongoDB' });
     }
 });
-// PUT /api/items/:id - Update item
+// PUT /api/items/:id - Update item directly in MongoDB Atlas
 router.put('/:id', async (req, res) => {
     try {
         await (0, db_1.connectDB)();
@@ -362,42 +91,51 @@ router.put('/:id', async (req, res) => {
             updateData.price = Number(price);
         if (unit !== undefined)
             updateData.unit = String(unit).trim();
-        if (tag !== undefined)
+        if (tag !== undefined) {
             updateData.tag = String(tag).trim();
+            await Tag_1.default.findOneAndUpdate({ name: updateData.tag }, { name: updateData.tag }, { upsert: true }).catch(() => { });
+        }
         if (imageUrl !== undefined)
             updateData.imageUrl = imageUrl;
         if (description !== undefined)
             updateData.description = String(description).trim();
         if (inStock !== undefined)
             updateData.inStock = Boolean(inStock);
-        // Update global shared memory
-        const idx = globalSharedItems.findIndex((i) => String(i._id) === String(id) || i.name === updateData.name);
-        if (idx !== -1) {
-            globalSharedItems[idx] = { ...globalSharedItems[idx], ...updateData };
-        }
+        let updatedItem = null;
         if (mongoose_1.default.Types.ObjectId.isValid(id)) {
-            Item_1.default.findByIdAndUpdate(id, updateData, { new: true }).catch(() => { });
+            updatedItem = await Item_1.default.findByIdAndUpdate(id, updateData, { new: true });
         }
-        return res.json({ success: true, message: 'Item updated successfully', item: globalSharedItems[idx] || updateData });
+        else if (name) {
+            updatedItem = await Item_1.default.findOneAndUpdate({ name: String(name).trim() }, updateData, { new: true, upsert: true });
+        }
+        if (!updatedItem) {
+            return res.status(404).json({ success: false, message: 'Item not found in MongoDB' });
+        }
+        console.log('✅ Successfully updated item in MongoDB Atlas:', id, updateData);
+        return res.json({ success: true, message: 'Item updated successfully', item: updatedItem });
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: 'Failed to update item' });
+        console.error('Error updating item in MongoDB:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Failed to update item' });
     }
 });
-// DELETE /api/items/:id - Delete item
+// DELETE /api/items/:id - Delete item directly from MongoDB Atlas
 router.delete('/:id', async (req, res) => {
     try {
         await (0, db_1.connectDB)();
         const { id } = req.params;
-        // Remove from global shared memory
-        globalSharedItems = globalSharedItems.filter((i) => String(i._id) !== String(id) && i.name !== id);
         if (mongoose_1.default.Types.ObjectId.isValid(id)) {
-            Item_1.default.findByIdAndDelete(id).catch(() => { });
+            await Item_1.default.findByIdAndDelete(id);
         }
+        else {
+            await Item_1.default.findOneAndDelete({ name: id });
+        }
+        console.log('✅ Successfully deleted item from MongoDB Atlas:', id);
         return res.json({ success: true, message: 'Item deleted successfully' });
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: 'Failed to delete item' });
+        console.error('Error deleting item from MongoDB:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Failed to delete item' });
     }
 });
 exports.default = router;

@@ -8,7 +8,7 @@ dotenv_1.default.config();
 const db_1 = require("../config/db");
 const Item_1 = __importDefault(require("../models/Item"));
 const Tag_1 = __importDefault(require("../models/Tag"));
-const itemRoutes_1 = require("../routes/itemRoutes");
+const seedData_1 = require("../models/seedData");
 const tagRoutes_1 = require("../routes/tagRoutes");
 async function seed() {
     console.log('🌱 Starting database seeding for Shree Pashupatinath Hardware...');
@@ -21,8 +21,8 @@ async function seed() {
     await Tag_1.default.insertMany(tagDocs);
     console.log(`✅ Seeded ${tagDocs.length} hardware categories/tags.`);
     // Insert Items
-    await Item_1.default.insertMany(itemRoutes_1.SAMPLE_HARDWARE_ITEMS);
-    console.log(`✅ Seeded ${itemRoutes_1.SAMPLE_HARDWARE_ITEMS.length} hardware items with prices and photos.`);
+    await Item_1.default.insertMany(seedData_1.SAMPLE_HARDWARE_ITEMS);
+    console.log(`✅ Seeded ${seedData_1.SAMPLE_HARDWARE_ITEMS.length} hardware items with prices and photos.`);
     console.log('🎉 Seeding complete!');
     process.exit(0);
 }

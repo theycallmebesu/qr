@@ -4,7 +4,7 @@ dotenv.config();
 import { connectDB } from '../config/db';
 import Item from '../models/Item';
 import Tag from '../models/Tag';
-import { SAMPLE_HARDWARE_ITEMS } from '../routes/itemRoutes';
+import { SAMPLE_HARDWARE_ITEMS } from '../models/seedData';
 import { DEFAULT_TAGS } from '../routes/tagRoutes';
 
 async function seed() {
