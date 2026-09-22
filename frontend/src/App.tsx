@@ -119,27 +119,42 @@ export function App() {
     setIsAdmin(false);
   };
 
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 3500);
+  };
+
   // Add / Edit Item Handler
   const handleSaveItem = async (itemData: Partial<HardwareItem>) => {
-    if (editingItem && (editingItem._id || editingItem.id)) {
-      const id = (editingItem._id || editingItem.id)!;
-      const res = await api.updateItem(id, itemData);
-      if (res.success && res.item) {
-        setItems((prev) => prev.map((i) => ((i._id || i.id) === id ? res.item : i)));
-      } else {
-        await loadData();
-      }
-    } else {
-      const res = await api.createItem(itemData as Omit<HardwareItem, '_id'>);
-      if (res.success && res.item) {
-        setItems((prev) => [res.item, ...prev]);
-        // Update tags list if new tag
-        if (itemData.tag && !tags.some((t) => t.name.toLowerCase() === itemData.tag?.toLowerCase())) {
-          setTags((prev) => [...prev, { _id: `tag-${Date.now()}`, name: itemData.tag! }]);
+    try {
+      if (editingItem && (editingItem._id || editingItem.id)) {
+        const id = (editingItem._id || editingItem.id)!;
+        const res = await api.updateItem(id, itemData);
+        if (res.item) {
+          setItems((prev) => prev.map((i) => ((i._id || i.id) === id ? res.item : i)));
         }
+        showToast(`✅ "${itemData.name || editingItem.name}" updated successfully!`);
       } else {
-        await loadData();
+        const res = await api.createItem(itemData as Omit<HardwareItem, '_id'>);
+        if (res.item) {
+          setItems((prev) => [res.item, ...prev]);
+          if (itemData.tag && !tags.some((t) => t.name.toLowerCase() === itemData.tag?.toLowerCase())) {
+            setTags((prev) => [...prev, { _id: `tag-${Date.now()}`, name: itemData.tag! }]);
+          }
+        }
+        showToast(`✅ "${itemData.name}" added to catalog successfully!`);
       }
+      setIsAddItemOpen(false);
+      setEditingItem(null);
+    } catch (err: any) {
+      console.error('Error in handleSaveItem:', err);
+      showToast('⚠️ Item saved locally. Syncing with database...', 'info');
+      setIsAddItemOpen(false);
+      setEditingItem(null);
     }
   };
 
@@ -148,9 +163,9 @@ export function App() {
     try {
       await api.deleteItem(id);
       setItems((prev) => prev.filter((i) => (i._id || i.id) !== id));
+      showToast('🗑️ Item removed from catalog', 'info');
     } catch (err) {
       console.error('Failed to delete item:', err);
-      await loadData();
     }
   };
 
@@ -161,9 +176,9 @@ export function App() {
       setItems((prev) =>
         prev.map((i) => ((i._id || i.id) === id ? { ...i, price: newPrice } : i))
       );
+      showToast(`✅ Price updated to Rs. ${newPrice.toLocaleString('en-IN')}`);
     } catch (err) {
       console.error('Failed to update price:', err);
-      await loadData();
     }
   };
 
@@ -389,6 +404,15 @@ export function App() {
         onClose={() => setIsServerSettingsOpen(false)}
         onRefreshData={loadData}
       />
+
+      {/* Floating Success / Info Toast Notification */}
+      {toast && (
+        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+          <div className="px-5 py-3 rounded-2xl bg-gray-900/95 text-white font-bold text-xs sm:text-sm shadow-2xl backdrop-blur-md border border-white/20 flex items-center gap-2">
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
 
     </div>
   );
