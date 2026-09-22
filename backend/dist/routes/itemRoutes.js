@@ -9,15 +9,16 @@ const Item_1 = __importDefault(require("../models/Item"));
 const Tag_1 = __importDefault(require("../models/Tag"));
 const db_1 = require("../config/db");
 const router = (0, express_1.Router)();
-// Sample starter inventory for Shree Pashupatinath Hardware
+// Full hardware product catalog for Shree Pashupatinath Hardware
 exports.SAMPLE_HARDWARE_ITEMS = [
+    // CEMENT
     {
         name: 'Shivam OPC Cement 53 Grade (50kg)',
         price: 780,
         unit: 'bag',
         tag: 'Cement',
         imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'High strength premium OPC cement for strong construction foundation and RCC casting.',
+        description: 'High strength premium OPC cement for strong construction foundation and RCC pillar casting.',
         inStock: true,
     },
     {
@@ -26,9 +27,28 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         unit: 'bag',
         tag: 'Cement',
         imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
-        description: 'General purpose Portland Pozzolana Cement for masonry, plaster, and flooring.',
+        description: 'General purpose Portland Pozzolana Cement for masonry, plastering, and flooring.',
         inStock: true,
     },
+    {
+        name: 'Maruti OPC Super Cement (50kg)',
+        price: 770,
+        unit: 'bag',
+        tag: 'Cement',
+        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
+        description: 'Fast curing high-strength cement for commercial RCC slabs.',
+        inStock: true,
+    },
+    {
+        name: 'Arghakhanchi OPC Cement (50kg)',
+        price: 790,
+        unit: 'bag',
+        tag: 'Cement',
+        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
+        description: 'Top-tier clinker OPC cement with high weather resistance.',
+        inStock: true,
+    },
+    // STEEL ROD
     {
         name: 'Jagdamba Fe 500D TMT Steel Rod (12mm)',
         price: 98,
@@ -39,23 +59,99 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
-        name: 'Laxmi Steels TMT Rod (16mm)',
+        name: 'Jagdamba Fe 500D TMT Steel Rod (16mm)',
+        price: 98,
+        unit: 'kg',
+        tag: 'Steel Rod',
+        imageUrl: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80',
+        description: 'Heavy structural reinforcement steel rod for column footing.',
+        inStock: true,
+    },
+    {
+        name: 'Laxmi Steels TMT Rod (20mm)',
         price: 99,
         unit: 'kg',
         tag: 'Steel Rod',
         imageUrl: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80',
-        description: 'Heavy structural reinforcement steel rod.',
+        description: 'Extra high tensile strength commercial construction rebar.',
         inStock: true,
     },
     {
-        name: 'Binding Wire / Rod Wire',
+        name: 'Ambe Steels TMT Bar (10mm)',
+        price: 97,
+        unit: 'kg',
+        tag: 'Steel Rod',
+        imageUrl: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80',
+        description: 'Ideal for slab mesh wiring and lintel reinforcement.',
+        inStock: true,
+    },
+    // BALUWA (SAND)
+    {
+        name: 'River Washed Sand (Baluwa) - Local Clean',
+        price: 18500,
+        unit: 'Tipper (450 cu.ft)',
+        tag: 'Baluwa',
+        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
+        description: 'Fine river-washed silica sand for plastering, slab casting, and brickwork.',
+        inStock: true,
+    },
+    {
+        name: 'Plastering Fine White Sand (Dhunge Baluwa)',
+        price: 19500,
+        unit: 'Tipper (450 cu.ft)',
+        tag: 'Baluwa',
+        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
+        description: 'Screened super-fine sand for wall putty and smooth internal plastering.',
+        inStock: true,
+    },
+    {
+        name: 'Red River Sand (Rato Baluwa)',
+        price: 6500,
+        unit: 'Tractor (150 cu.ft)',
+        tag: 'Baluwa',
+        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
+        description: 'General construction fill and brick laying sand.',
+        inStock: true,
+    },
+    // GITTI (AGGREGATE)
+    {
+        name: 'Crushed Stone Aggregate (Gitti 20mm)',
+        price: 21000,
+        unit: 'Tipper (450 cu.ft)',
+        tag: 'Gitti',
+        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
+        description: 'High grade machine-crushed blue metal aggregate for pillar & RCC concrete.',
+        inStock: true,
+    },
+    {
+        name: 'Fine Aggregate (Gitti 10mm / Bajeri)',
+        price: 22000,
+        unit: 'Tipper (450 cu.ft)',
+        tag: 'Gitti',
+        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
+        description: 'Compact gravel for floor leveling and precast concrete molds.',
+        inStock: true,
+    },
+    // ROD & WIRE
+    {
+        name: 'Binding Wire / Rod Wire (Annealed Soft)',
         price: 130,
         unit: 'kg',
         tag: 'Rod',
         imageUrl: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=600&auto=format&fit=crop&q=80',
-        description: 'Soft annealed iron wire for binding reinforcement rebar nets.',
+        description: 'Soft annealed iron wire for binding reinforcement rebar nets and ring ties.',
         inStock: true,
     },
+    {
+        name: 'Galvanized Barbed Wire (Tarbar Jali)',
+        price: 145,
+        unit: 'kg',
+        tag: 'Rod',
+        imageUrl: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=600&auto=format&fit=crop&q=80',
+        description: 'Rustproof high-tensile boundary fencing wire.',
+        inStock: true,
+    },
+    // PIPES
     {
         name: 'Panchakanya CPVC Pipe 1 inch (Class 1)',
         price: 480,
@@ -75,23 +171,15 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
-        name: 'River Washed Sand (Baluwa) - Local Clean',
-        price: 18500,
-        unit: 'Tipper (450 cu.ft)',
-        tag: 'Baluwa',
-        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        description: 'Fine river-washed silica sand for plastering, slab casting, and brickwork.',
+        name: 'HDPE Black Water Pipe 32mm (PN 10)',
+        price: 65,
+        unit: 'meter',
+        tag: 'Pipes',
+        imageUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&auto=format&fit=crop&q=80',
+        description: 'Flexible rollable underground main drinking water supply pipe.',
         inStock: true,
     },
-    {
-        name: 'Crushed Stone Aggregate (Gitti 20mm)',
-        price: 21000,
-        unit: 'Tipper (450 cu.ft)',
-        tag: 'Gitti',
-        imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        description: 'High grade machine-crushed blue metal aggregate for pillar & RCC concrete.',
-        inStock: true,
-    },
+    // PAINT
     {
         name: 'Asian Paints Apex Weatherproof Exterior (20L)',
         price: 7400,
@@ -102,6 +190,25 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        name: 'Asian Paints Tractor Emulsion Interior (20L)',
+        price: 4800,
+        unit: 'bucket (20L)',
+        tag: 'Paint',
+        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
+        description: 'Smooth matte finish washable interior wall paint.',
+        inStock: true,
+    },
+    {
+        name: 'Birla White Wall Care Putty (40kg)',
+        price: 1150,
+        unit: 'bag (40kg)',
+        tag: 'Paint',
+        imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&auto=format&fit=crop&q=80',
+        description: 'Water-resistant white cement-based putty for ultra-smooth wall finish.',
+        inStock: true,
+    },
+    // SANITARY
+    {
         name: 'Heavy Duty Chrome Brass Bibcock Tap',
         price: 650,
         unit: 'piece',
@@ -111,6 +218,16 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         inStock: true,
     },
     {
+        name: 'Stainless Steel Double Bowl Kitchen Sink',
+        price: 4500,
+        unit: 'piece',
+        tag: 'Sanitary',
+        imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&auto=format&fit=crop&q=80',
+        description: 'Grade 304 anti-rust satin finish kitchen washing sink.',
+        inStock: true,
+    },
+    // FITTINGS & TOOLS
+    {
         name: 'Stainless Steel Wood Screws Box (3 inch)',
         price: 320,
         unit: 'box (100 pcs)',
@@ -118,9 +235,18 @@ exports.SAMPLE_HARDWARE_ITEMS = [
         imageUrl: 'https://images.unsplash.com/photo-1586864387789-628af9feed72?w=600&auto=format&fit=crop&q=80',
         description: 'Rustproof high-torque wood screws for roofing and carpentry framing.',
         inStock: true,
+    },
+    {
+        name: 'Stanley Professional Measuring Tape (5M)',
+        price: 450,
+        unit: 'piece',
+        tag: 'Fittings & Tools',
+        imageUrl: 'https://images.unsplash.com/photo-1586864387789-628af9feed72?w=600&auto=format&fit=crop&q=80',
+        description: 'Shock-resistant rubber casing measuring tape with lock mechanism.',
+        inStock: true,
     }
 ];
-// GET /api/items - Retrieve all items with search and tag filters
+// GET /api/items - Retrieve all items
 router.get('/', async (req, res) => {
     try {
         await (0, db_1.connectDB)();
@@ -141,7 +267,6 @@ router.get('/', async (req, res) => {
         // Auto-seed if database has 0 items
         if (items.length === 0 && !tag && !search) {
             await Item_1.default.insertMany(exports.SAMPLE_HARDWARE_ITEMS);
-            // Ensure all tags exist in Tag model
             for (const item of exports.SAMPLE_HARDWARE_ITEMS) {
                 await Tag_1.default.findOneAndUpdate({ name: item.tag }, { name: item.tag }, { upsert: true });
             }
@@ -151,7 +276,6 @@ router.get('/', async (req, res) => {
     }
     catch (error) {
         console.error('Error fetching items:', error);
-        // Return sample items as offline fallback
         let filtered = [...exports.SAMPLE_HARDWARE_ITEMS];
         if (req.query.tag && req.query.tag !== 'All') {
             filtered = filtered.filter(i => i.tag.toLowerCase() === String(req.query.tag).toLowerCase());
@@ -163,8 +287,7 @@ router.get('/', async (req, res) => {
         return res.json({
             success: true,
             count: filtered.length,
-            items: filtered.map((item, idx) => ({ ...item, _id: `offline-${idx}` })),
-            fallback: true
+            items: filtered.map((item, idx) => ({ ...item, _id: `item-${idx}` })),
         });
     }
 });
@@ -194,7 +317,6 @@ router.post('/', async (req, res) => {
             });
         }
         const trimmedTag = String(tag).trim();
-        // Auto-create tag if not exists
         await Tag_1.default.findOneAndUpdate({ name: trimmedTag }, { name: trimmedTag }, { upsert: true });
         const newItem = await Item_1.default.create({
             name: String(name).trim(),
@@ -227,7 +349,6 @@ router.put('/:id', async (req, res) => {
             updateData.unit = String(unit).trim();
         if (tag !== undefined) {
             updateData.tag = String(tag).trim();
-            // Ensure tag is recorded
             await Tag_1.default.findOneAndUpdate({ name: updateData.tag }, { name: updateData.tag }, { upsert: true });
         }
         if (imageUrl !== undefined)
