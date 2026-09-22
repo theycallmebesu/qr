@@ -63,23 +63,45 @@ export const AdminItemModal: React.FC<AdminItemModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Handle Photo / Gallery Upload
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fast client-side image compression for gallery & camera uploads
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Selected image is too large (max 10MB)');
-      return;
+    setError('');
+    try {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          const maxDim = 800;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            setImageUrl(canvas.toDataURL('image/jpeg', 0.8));
+          } else {
+            setImageUrl(event.target?.result as string);
+          }
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Image compression failed, using original:', err);
     }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setImageUrl(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleCreateNewTag = async () => {

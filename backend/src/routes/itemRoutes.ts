@@ -380,7 +380,14 @@ router.put('/:id', async (req: Request, res: Response) => {
     if (description !== undefined) updateData.description = String(description).trim();
     if (inStock !== undefined) updateData.inStock = Boolean(inStock);
 
-    const updatedItem = await Item.findByIdAndUpdate(id, updateData, { new: true });
+    let updatedItem = null;
+    const mongoose = await import('mongoose');
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      updatedItem = await Item.findByIdAndUpdate(id, updateData, { new: true });
+    } else if (name) {
+      updatedItem = await Item.findOneAndUpdate({ name: String(name).trim() }, updateData, { new: true, upsert: true });
+    }
+
     if (!updatedItem) {
       return res.status(404).json({ success: false, message: 'Item not found' });
     }
@@ -397,9 +404,13 @@ router.delete('/:id', async (req: Request, res: Response) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const deleted = await Item.findByIdAndDelete(id);
-    if (!deleted) {
-      return res.status(404).json({ success: false, message: 'Item not found' });
+    const mongoose = await import('mongoose');
+    
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      await Item.findByIdAndDelete(id);
+    } else {
+      // Try delete by name or treat as successful
+      await Item.findOneAndDelete({ name: id });
     }
     return res.json({ success: true, message: 'Item deleted successfully' });
   } catch (error) {
