@@ -67,7 +67,7 @@ A modern, mobile-first web application for **Shree Pashupatinath Hardware**. It 
    - **Build Command**: `npm install && npm run build`
    - **Start Command**: `npm start`
 4. Add the following **Environment Variables**:
-   - `MONGODB_URI`: `mongodb+srv://bishu1maharjan_db_user:bishu@cluster0.gkmyrme.mongodb.net/hardwareshop_db?retryWrites=true&w=majority&appName=Cluster0`
+   - `MONGODB_URI`: `mongodb+srv://bishu1maharjan_db_user:EuCEAgf9I39StGlu@cluster0.gkmyrme.mongodb.net/bankqr?retryWrites=true&w=majority&appName=Cluster0`
    - `ADMIN_PASSWORD`: `0000`
    - `PORT`: `5000`
    - `NODE_ENV`: `production`
