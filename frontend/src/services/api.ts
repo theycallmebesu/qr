@@ -1,6 +1,6 @@
 import { HardwareItem, Tag } from '../types';
 
-// Get active API base URL (from Vercel env, localStorage, or relative proxy)
+// Get active API base URL (defaults to live Render backend)
 export function getApiBaseUrl(): string {
   const customUrl = localStorage.getItem('shree_backend_url');
   if (customUrl && customUrl.trim()) {
@@ -10,7 +10,7 @@ export function getApiBaseUrl(): string {
   if (envUrl && envUrl.trim()) {
     return envUrl.trim().replace(/\/$/, '');
   }
-  return '';
+  return 'https://qr-1xj5.onrender.com';
 }
 
 export function setApiBaseUrl(url: string) {
